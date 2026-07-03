@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurnal Laporan Keuangan Bulanan</title>
+    <!-- Tailwind CSS untuk Desain yang Rapi -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">📊 Jurnal Laporan Keuangan Bulanan</h1>
+
+        <!-- Grid Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                <p class="text-sm font-medium text-green-600">Total Pemasukan</p>
+                <p id="totalPemasukan" class="text-2xl font-bold text-green-700">Rp 0</p>
+            </div>
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                <p class="text-sm font-medium text-red-600">Total Pengeluaran</p>
+                <p id="totalPengeluaran" class="text-2xl font-bold text-red-700">Rp 0</p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p class="text-sm font-medium text-blue-600">Saldo Akhir</p>
+                <p id="saldoAkhir" class="text-2xl font-bold text-blue-700">Rp 0</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Form Input / Edit -->
+            <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 h-fit">
+                <h2 id="formTitle" class="text-xl font-semibold text-gray-700 mb-4">📝 Tambah Transaksi</h2>
+                <form id="transaksiForm" class="space-y-4">
+                    <input type="hidden" id="transaksiId">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal</label>
+                        <input type="date" id="tanggal" required class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Nama Toko / Tempat</label>
+                        <input type="text" id="namaToko" placeholder="Contoh: Indomaret, Shopee, Warung Bakso" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Detail Barang / Keterangan</label>
+                        <input type="text" id="keterangan" required placeholder="Contoh: Beli makan siang, Bayar kost" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Kategori</label>
+                        <select id="kategori" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                            <option value="Makanan">Makanan</option>
+                            <option value="Transportasi">Transportasi</option>
+                            <option value="Kost/Listrik">Kost/Listrik</option>
+                            <option value="Gaji/Pemasukan">Gaji/Pemasukan</option>
+                            <option value="Trading/Investasi">Trading/Investasi</option>
+                            <option value="Lain-lain">Lain-lain</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Jenis Transaksi</label>
+                        <select id="jenis" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                            <option value="Pengeluaran">Pengeluaran</option>
+                            <option value="Pemasukan">Pemasukan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Jumlah (Rp)</label>
+                        <input type="number" id="jumlah" required min="0" placeholder="0" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                    </div>
+
+                    <div class="pt-2 space-y-2">
+                        <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 font-medium transition cursor-pointer">Simpan Transaksi</button>
+                        <button type="button" id="cancelBtn" class="w-full bg-gray-300 text-gray-700 p-2 rounded-md hover:bg-gray-400 font-medium transition hidden cursor-pointer">Batal Edit</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabel Histori Data -->
+            <div class="lg:col-span-2">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">📈 Histori Transaksi Bulan Ini</h2>
+                <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+                    <table class="w-full text-left border-collapse bg-white">
+                        <thead class="bg-gray-100 text-gray-700 border-b border-gray-200 font-medium text-sm">
+                            <tr>
+                                <th class="p-3">Tanggal</th>
+                                <th class="p-3">Toko/Tempat</th>
+                                <th class="p-3">Detail/Keterangan</th>
+                                <th class="p-3">Kategori</th>
+                                <th class="p-3">Jenis</th>
+                                <th class="p-3 text-right">Jumlah</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelBody" class="divide-y divide-gray-100 text-sm text-gray-600">
+                            <!-- Data otomatis dirender di sini via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIKA JAVASCRIPT -->
+    <script>
+        let transaksiData = JSON.parse(localStorage.getItem('jurnalKeuangan')) || [];
+        const form = document.getElementById('transaksiForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const formTitle = document.getElementById('formTitle');
+
+        // Mengeset tanggal hari ini secara default di input form
+        document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        }
+
+        function updateSummaryAndTable() {
+            const tbody = document.getElementById('tabelBody');
+            tbody.innerHTML = '';
+            
+            let pem_total = 0;
+            let peng_total = 0;
+
+            // Sort data berdasarkan tanggal terbaru
+            transaksiData.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+            if (transaksiData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400 italic">Belum ada catatan transaksi.</td></tr>`;
+            }
+
+            transaksiData.forEach(item => {
+                if (item.jenis === 'Pemasukan') pem_total += parseFloat(item.jumlah);
+                else peng_total += parseFloat(item.jumlah);
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3">${item.tanggal}</td>
+                    <td class="p-3 font-medium text-gray-800">${item.namaToko || '-'}</td>
+                    <td class="p-3">${item.keterangan}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 text-xs bg-gray-200 text-gray-700 rounded-full">${item.kategori}</span></td>
+                    <td class="p-3 font-semibold ${item.jenis === 'Pemasukan' ? 'text-green-600' : 'text-red-600'}">${item.jenis}</td>
+                    <td class="p-3 text-right font-medium">${formatRupiah(item.jumlah)}</td>
+                    <td class="p-3 text-center space-x-1 whitespace-nowrap">
+                        <button onclick="siapkanEdit('${item.id}')" class="text-blue-600 hover:text-blue-800 font-medium px-2 py-1 cursor-pointer">Edit</button>
+                        <button onclick="hapusData('${item.id}')" class="text-red-600 hover:text-red-800 font-medium px-2 py-1 cursor-pointer">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('totalPemasukan').innerText = formatRupiah(pem_total);
+            document.getElementById('totalPengeluaran').innerText = formatRupiah(peng_total);
+            document.getElementById('saldoAkhir').innerText = formatRupiah(pem_total - peng_total);
+
+            localStorage.setItem('jurnalKeuangan', JSON.stringify(transaksiData));
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('transaksiId').value;
+            const tanggal = document.getElementById('tanggal').value;
+            const namaToko = document.getElementById('namaToko').value;
+            const keterangan = document.getElementById('keterangan').value;
+            const kategori = document.getElementById('kategori').value;
+            const jenis = document.getElementById('jenis').value;
+            const jumlah = document.getElementById('jumlah').value;
+
+            if (id) {
+                // Proses Edit/Update
+                transaksiData = transaksiData.map(item => item.id === id ? { id, tanggal, namaToko, keterangan, kategori, jenis, jumlah } : item);
+                resetForm();
+            } else {
+                // Proses Tambah Baru
+                const baru = {
+                    id: Date.now().toString(),
+                    tanggal, namaToko, keterangan, kategori, jenis, jumlah
+                };
+                transaksiData.push(baru);
+                form.reset();
+                document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+            }
+
+            updateSummaryAndTable();
+        });
+
+        function siapkanEdit(id) {
+            const target = transaksiData.find(item => item.id === id);
+            if (!target) return;
+
+            document.getElementById('transaksiId').value = target.id;
+            document.getElementById('tanggal').value = target.tanggal;
+            document.getElementById('namaToko').value = target.namaToko;
+            document.getElementById('keterangan').value = target.keterangan;
+            document.getElementById('kategori').value = target.kategori;
+            document.getElementById('jenis').value = target.jenis;
+            document.getElementById('jumlah').value = target.jumlah;
+
+            formTitle.innerText = "🔄 Edit Transaksi";
+            submitBtn.innerText = "Perbarui Transaksi";
+            cancelBtn.classList.remove('hidden');
+        }
+
+        cancelBtn.addEventListener('click', resetForm);
+
+        function resetForm() {
+            form.reset();
+            document.getElementById('transaksiId').value = '';
+            document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+            formTitle.innerText = "📝 Tambah Transaksi";
+            submitBtn.innerText = "Simpan Transaksi";
+            cancelBtn.classList.add('hidden');
+        }
+
+        function hapusData(id) {
+            if (confirm('Apakah kamu yakin ingin menghapus transaksi ini?')) {
+                transaksiData = transaksiData.filter(item => item.id !== id);
+                if (document.getElementById('transaksiId').value === id) resetForm();
+                updateSummaryAndTable();
+            }
+        }
+
+        // Jalankan saat pertama kali halaman dibuka
+        updateSummaryAndTable();
+    </script>
+</body>
+</html>
