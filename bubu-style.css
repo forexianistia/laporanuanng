@@ -1,0 +1,31 @@
+body { 
+    font-family: 'Quicksand', sans-serif; 
+}
+
+.font-cute { 
+    font-family: 'Fredoka One', cursive; 
+}
+
+/* Elemen container untuk animasi latar belakang */
+#bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    background-color: #FFF5EE;
+}
+
+/* Styling dasar untuk setiap karakter GIF yang meluncur */
+.floating-gif {
+    position: absolute;
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    opacity: 0.35; /* Supaya transparan halus dan tulisan tetap jelas dibaca */
+    user-select: none;
+    will-change: transform;
+}
