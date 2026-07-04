@@ -9,16 +9,42 @@
     <style>
         body { font-family: 'Quicksand', sans-serif; }
         .font-cute { font-family: 'Fredoka One', cursive; }
+        
+        /* Elemen container untuk animasi latar belakang */
+        #bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+            background-color: #FFF5EE;
+        }
+
+        /* Styling dasar untuk setiap karakter GIF yang meluncur */
+        .floating-gif {
+            position: absolute;
+            width: 75px;
+            height: 75px;
+            object-fit: contain;
+            opacity: 0.35; /* Agar tidak terlalu mencolok saat membaca teks */
+            user-select: none;
+            will-change: transform;
+        }
     </style>
 </head>
-<body class="bg-[#FFF5EE] text-slate-700 min-h-screen pb-12">
+<body class="text-slate-700 min-h-screen pb-12 relative">
 
-    <!-- AUDIO CONTEXT & SYSTEM -->
-    <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+    <!-- CONTAINER BACKGROUND ANIMASI GIF -->
+    <div id="bg-container"></div>
+
+    <!-- UTAMA APPLICATION CONTEXT -->
+    <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 relative z-10">
         
         <!-- HEADER UTAMA WITH BUBU DUDU THEME -->
-        <header class="mb-6 relative flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-3xl shadow-md border-4 border-[#FFDAB9]">
-            <!-- Karakter Hiasan Bubu Dudu Kiri & Kanan (Menggunakan SVG Gambar Beruang Imut) -->
+        <header class="mb-6 relative flex flex-col md:flex-row justify-between items-center gap-4 bg-white/90 backdrop-blur-xs p-6 rounded-3xl shadow-md border-4 border-[#FFDAB9]">
             <div class="flex items-center gap-4 text-center md:text-left">
                 <div class="w-16 h-16 bg-[#FEE180] rounded-full flex items-center justify-center text-3xl shadow-inner border-2 border-white">🐼</div>
                 <div>
@@ -58,7 +84,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             
             <!-- KIRI: FORMULIR INPUT IMUT -->
-            <div class="bg-white p-5 rounded-3xl shadow-md border-4 border-[#FFB6C1] lg:col-span-1">
+            <div class="bg-white/90 backdrop-blur-xs p-5 rounded-3xl shadow-md border-4 border-[#FFB6C1] lg:col-span-1">
                 <h2 id="formTitle" class="text-md font-cute mb-3 text-[#D2691E] border-b-2 border-dashed border-[#FFDAB9] pb-2 flex items-center gap-1.5">📝 Tambah Catatan</h2>
                 
                 <form id="mainForm" class="space-y-3.5">
@@ -126,7 +152,7 @@
             </div>
 
             <!-- KANAN: TABEL HISTORI DATA IMUT -->
-            <div class="bg-white p-5 rounded-3xl shadow-md border-4 border-[#FFDAB9] lg:col-span-2 overflow-hidden">
+            <div class="bg-white/90 backdrop-blur-xs p-5 rounded-3xl shadow-md border-4 border-[#FFDAB9] lg:col-span-2 overflow-hidden">
                 <h2 id="tableTitle" class="text-md font-cute mb-3 text-[#D2691E] border-b-2 border-dashed border-[#FFDAB9] pb-2 flex items-center gap-1.5">📈 Histori Bulan Ini</h2>
                 
                 <div class="overflow-x-auto w-full rounded-2xl border border-[#FFE4C4]">
@@ -155,7 +181,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT SYSTEM + AUDIO IMPLEMENTATION -->
+    <!-- JAVASCRIPT SYSTEM + AUDIO & BACKGROUND SYSTEM -->
     <script>
         let currentMode = 'keuangan';
         let dbKeuangan = [];
@@ -166,23 +192,105 @@
         let KURS_USD_TO_IDR = 17994.40;
         let KURS_CENT_TO_IDR = 179.944;
 
+        // --- SISTEM LATAR BELAKANG FLUID DRAWER (GIF BERGERAK BEBAS) ---
+        const listFileGif = [
+            "9976-bubu-lol.gif",
+            "10814-bubu-and-dudu-drink-glass.gif",
+            "18713-bubu.gif",
+            "23724-unyel.gif",
+            "55578-pandasquishy.gif",
+            "70798-bearsquish.gif",
+            "86953-bubududu-kiss.gif",
+            "4178-bubuwinterhopyellow.gif",
+            "4393-bearbounce.gif",
+            "4694-sleep-bubupanda.gif"
+        ];
+
+        const containerBg = document.getElementById('bg-container');
+        const activeGifs = [];
+
+        function inisialisasiGifLatar() {
+            listFileGif.forEach((namaFile) => {
+                const img = document.createElement('img');
+                img.src = namaFile;
+                img.className = 'floating-gif';
+                
+                // Distribusi posisi awal acak di layar browser
+                const posX = Math.random() * (window.innerWidth - 100);
+                const posY = Math.random() * (window.innerHeight - 100);
+                
+                // Menentukan arah gerak acak (Delta X & Delta Y)
+                let dx = (Math.random() - 0.5) * 1.2;
+                let dy = (Math.random() - 0.5) * 1.2;
+                
+                // Minimal kecepatan agar tidak diam di tempat
+                if (Math.abs(dx) < 0.3) dx = dx < 0 ? -0.4 : 0.4;
+                if (Math.abs(dy) < 0.3) dy = dy < 0 ? -0.4 : 0.4;
+
+                img.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
+                containerBg.appendChild(img);
+
+                activeGifs.push({
+                    element: img,
+                    x: posX,
+                    y: posY,
+                    dx: dx,
+                    dy: dy,
+                    width: 75,
+                    height: 75
+                });
+            });
+
+            // Jalankan siklus pembaruan posisi animasi frame demi frame
+            requestAnimationFrame(updatePosisiGif);
+        }
+
+        function updatePosisiGif() {
+            const lebarLayar = window.innerWidth;
+            const tinggiLayar = window.innerHeight;
+
+            activeGifs.forEach((obj) => {
+                obj.x += obj.dx;
+                obj.y += obj.dy;
+
+                // Cek benturan batas layar kanan / kiri, pantulkan arahnya jika mentok
+                if (obj.x <= 0) {
+                    obj.x = 0;
+                    obj.dx *= -1;
+                } else if (obj.x + obj.width >= lebarLayar) {
+                    obj.x = lebarLayar - obj.width;
+                    obj.dx *= -1;
+                }
+
+                // Cek benturan batas layar atas / bawah, pantulkan arahnya jika mentok
+                if (obj.y <= 0) {
+                    obj.y = 0;
+                    obj.dy *= -1;
+                } else if (obj.y + obj.height >= tinggiLayar) {
+                    obj.y = tinggiLayar - obj.height;
+                    obj.dy *= -1;
+                }
+
+                // Terapkan posisi baru menggunakan translate3d untuk akselerasi performa GPU
+                obj.element.style.transform = `translate3d(${obj.x}px, ${obj.y}px, 0)`;
+            });
+
+            requestAnimationFrame(updatePosisiGif);
+        }
+
         // --- SISTEM KUSTOM AUDIO BUBU DUDU ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function mainkanSuaraKetik() {
             const modeSuara = document.getElementById('menuSuara').value;
             if (modeSuara === 'OFF') return;
-
             if (audioCtx.state === 'suspended') audioCtx.resume();
-
             const sekarang = audioCtx.currentTime;
             
             if (modeSuara === '1') {
-                // Suara 1: "Yatta!" - Dua nada meloncat ceria cepat
-                buatNada(659.25, sekarang, 0.05); // E5
-                buatNada(880.00, sekarang + 0.05, 0.08); // A5
+                buatNada(659.25, sekarang, 0.05);
+                buatNada(880.00, sekarang + 0.05, 0.08);
             } else if (modeSuara === '2') {
-                // Suara 2: "Wawaa" - Suara meliuk turun ngambek
                 let osc = audioCtx.createOscillator();
                 let gain = audioCtx.createGain();
                 osc.type = 'triangle';
@@ -193,10 +301,9 @@
                 osc.connect(gain); gain.connect(audioCtx.destination);
                 osc.start(sekarang); osc.stop(sekarang + 0.15);
             } else if (modeSuara === '3') {
-                // Suara 3: "Aaa Katta!" - Nada naik tegas imut
-                buatNada(349.23, sekarang, 0.04); // F4
-                buatNada(523.25, sekarang + 0.04, 0.04); // C5
-                buatNada(698.46, sekarang + 0.08, 0.1); // F5
+                buatNada(349.23, sekarang, 0.04);
+                buatNada(523.25, sekarang + 0.04, 0.04);
+                buatNada(698.46, sekarang + 0.08, 0.1);
             }
         }
 
@@ -213,7 +320,6 @@
             } catch(e){}
         }
 
-        // Pasang event listener ketikan ke semua input text/number
         document.querySelectorAll('.input-efek-suara').forEach(element => {
             element.addEventListener('input', () => {
                 mainkanSuaraKetik();
@@ -303,7 +409,7 @@
                 tTitle.innerText = "📈 Histori Keuangan Bulanan";
             } else {
                 btnTabungan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
-                btnKeuangan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]";
+                btnKeuangan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]">;
                 labelToko.innerText = "🐷 Nama Celengan / Wadah";
                 labelDetail.innerText = "🎯 Target / Goal Nabung";
                 katContainer.classList.add('hidden');
@@ -345,15 +451,15 @@
                 
                 if (summary) {
                     summary.innerHTML = `
-                        <div class="bg-[#E0FFFF] p-3 rounded-2xl border-2 border-sky-200 shadow-xs">
+                        <div class="bg-[#E0FFFF]/90 backdrop-blur-xs p-3 rounded-2xl border-2 border-sky-200 shadow-xs">
                             <p class="text-[10px] font-bold text-sky-600 uppercase">🎁 Total Masuk</p>
                             <p class="text-md font-cute text-sky-700">${formatRupiah(totalPemasukan)}</p>
                         </div>
-                        <div class="bg-[#FFE4E1] p-3 rounded-2xl border-2 border-rose-200 shadow-xs">
+                        <div class="bg-[#FFE4E1]/90 backdrop-blur-xs p-3 rounded-2xl border-2 border-rose-200 shadow-xs">
                             <p class="text-[10px] font-bold text-rose-500 uppercase">💸 Total Keluar</p>
                             <p class="text-md font-cute text-rose-600">${formatRupiah(totalPengeluaran)}</p>
                         </div>
-                        <div class="bg-[#FFF0F5] p-3 rounded-2xl border-2 border-purple-200 shadow-xs">
+                        <div class="bg-[#FFF0F5]/90 backdrop-blur-xs p-3 rounded-2xl border-2 border-purple-200 shadow-xs">
                             <p class="text-[10px] font-bold text-purple-500 uppercase">👛 Sisa Dompet</p>
                             <p class="text-md font-cute text-[#D2691E]">${formatRupiah(totalPemasukan - totalPengeluaran)}</p>
                         </div>
@@ -403,7 +509,7 @@
                 
                 if (summary) {
                     summary.innerHTML = `
-                        <div class="bg-[#FFF3E0] p-3.5 rounded-2xl border-2 border-amber-200 text-center col-span-full shadow-xs">
+                        <div class="bg-[#FFF3E0]/90 backdrop-blur-xs p-3.5 rounded-2xl border-2 border-amber-200 text-center col-span-full shadow-xs">
                             <p class="text-[11px] font-cute text-[#CD853F] uppercase tracking-wider">🌟 Isi Celengan Bubu Dudu Sekarang 🌟</p>
                             <p class="text-xl font-cute text-[#D2691E]">${formatRupiah(totalSimpanan - totalPenarikan)}</p>
                         </div>
@@ -477,7 +583,6 @@
                     }
                 }
 
-                // Efek suara kustom sukses menyimpan
                 buatNada(523.25, audioCtx.currentTime, 0.08);
                 buatNada(659.25, audioCtx.currentTime + 0.08, 0.08);
                 buatNada(783.99, audioCtx.currentTime + 0.16, 0.15);
@@ -558,6 +663,7 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             ambilKursTerbaru();
+            inisialisasiGifLatar(); // Memanggil inisialisasi background bergerak saat web siap
         });
     </script>
 </body>
