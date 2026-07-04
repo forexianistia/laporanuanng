@@ -138,6 +138,20 @@ function buatNada(frekuensi, mulai, durasi) {
     } catch(e){}
 }
 
+// --- SISTEM GANTI FONT DINAMIS ---
+function gantiFontAplikasi(namaFontBaru) {
+    const body = document.getElementById('mainBody');
+    if (body) {
+        // Bersihkan seluruh class font yang lama agar tidak bentrok
+        body.classList.remove('font-fredoka', 'font-quicksand', 'font-pacifico', 'font-comfortaa', 'font-patrick');
+        // Masukkan font baru sesuai value dari dropdown select menu
+        body.classList.add(namaFontBaru);
+        
+        // Simpan preferensi font di localStorage biar gak ke-reset saat refresh halaman
+        localStorage.setItem('fontAplikasiPilihan', namaFontBaru);
+    }
+}
+
 // --- CORE FUNCTIONALITIES ---
 async function ambilKursTerbaru() {
     try {
@@ -485,4 +499,14 @@ document.addEventListener("DOMContentLoaded", function() {
     ambilKursTerbaru();
     inisialisasiGifLatar();
     pasangEfekSuaraKetik();
+    
+    // Auto-load font yang tersimpan di memori lokal, default ke font-fredoka jika belum ada
+    const fontTersimpan = localStorage.getItem('fontAplikasiPilihan') || 'font-fredoka';
+    gantiFontAplikasi(fontTersimpan);
+    
+    // Sinkronisasi value select dropdown agar sesuai dengan font aktif
+    const selectMenuFont = document.getElementById('menuFont');
+    if (selectMenuFont) {
+        selectMenuFont.value = fontTersimpan;
+    }
 });
