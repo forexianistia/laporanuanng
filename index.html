@@ -12,17 +12,17 @@
     <!-- LIBRARY PEMBUAT PDF (html2pdf.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<!-- Mengubah Background Utama Menjadi Yellow Pastel (#FFF9E6) -->
+<!-- Latar belakang dasar ditaruh di body -->
 <body class="text-slate-700 min-h-screen pb-12 relative bg-[#FFF9E6]" id="mainBody">
 
-    <!-- AREA UTAMA YANG AKAN DI-DOWNLOAD (Bungkus GIF dan Konten Jadi Satu) -->
-    <div id="cetak-area" class="relative min-h-screen bg-[#FFF9E6]">
-        
-        <!-- CONTAINER BACKGROUND ANIMASI GIF (Sekrawang Berada di Dalam Area Cetak) -->
-        <div id="bg-container" class="absolute inset-0 pointer-events-none z-0 overflow-hidden"></div>
+    <!-- CONTAINER BACKGROUND ANIMASI GIF (Dipindahkan ke luar cetak-area dan diatur z-0 agar tidak menutupi apa-apa) -->
+    <div id="bg-container" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
 
+    <!-- AREA UTAMA YANG AKAN DI-DOWNLOAD (Dibuat bg-transparent agar GIF di belakang terlihat jelas) -->
+    <div id="cetak-area" class="relative min-h-screen bg-transparent z-10">
+        
         <!-- UTAMA APPLICATION CONTEXT -->
-        <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 relative z-10">
+        <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 relative">
             
             <!-- HEADER UTAMA WITH BUBU DUDU THEME -->
             <header class="mb-6 relative flex flex-col md:flex-row justify-between items-center gap-4 bg-white/95 backdrop-blur-xs p-6 rounded-3xl shadow-md border-4 border-[#FFDAB9]">
