@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&family=Pacifico&family=Comfortaa:wght@700&family=Chilanka&family=Patrick+Hand&display=swap" rel="stylesheet">
     <!-- Hubungkan ke file CSS eksternal -->
     <link rel="stylesheet" href="bubu-style.css">
+    <!-- LIBRARY PEMBUAT PDF (html2pdf.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <!-- Mengubah Background Utama Menjadi Yellow Pastel (#FFF9E6) -->
 <body class="text-slate-700 min-h-screen pb-12 relative bg-[#FFF9E6]" id="mainBody">
@@ -30,10 +32,10 @@
                 </div>
             </div>
 
-            <!-- KONTROL PENGATURAN (SUARA & FONT) -->
-            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <!-- KONTROL PENGATURAN & DOWNLOAD -->
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
                 <!-- MENU PILIHAN FONT IMUT (5 VARIAN) -->
-                <div class="bg-[#F0FFF4] p-3 rounded-2xl border-2 border-[#A7F3D0] flex flex-col items-center gap-1.5 flex-1">
+                <div class="bg-[#F0FFF4] p-3 rounded-2xl border-2 border-[#A7F3D0] flex flex-col items-center gap-1.5 w-full sm:w-40">
                     <label class="text-xs font-cute text-[#059669] flex items-center gap-1">🔤 Ganti Font Ketik:</label>
                     <select id="menuFont" onchange="gantiFontAplikasi(this.value)" class="text-xs font-bold p-1.5 bg-white border border-[#A7F3D0] rounded-xl focus:outline-none text-slate-700 cursor-pointer w-full">
                         <option value="font-fredoka">🧸 Fredoka One (Chubby)</option>
@@ -45,7 +47,7 @@
                 </div>
 
                 <!-- MENU SUARA KETIK (SOUND MENU) -->
-                <div class="bg-[#FFF0F5] p-3 rounded-2xl border-2 border-[#FFB6C1] flex flex-col items-center gap-1.5 flex-1">
+                <div class="bg-[#FFF0F5] p-3 rounded-2xl border-2 border-[#FFB6C1] flex flex-col items-center gap-1.5 w-full sm:w-40">
                     <label class="text-xs font-cute text-[#FF69B4] flex items-center gap-1">🎵 Pilih Suara Bubu Dudu:</label>
                     <select id="menuSuara" class="text-xs font-bold p-1.5 bg-white border border-[#FFB6C1] rounded-xl focus:outline-none text-slate-700 cursor-pointer w-full">
                         <option value="1">🐾 Suara 1 (Yatta/Cute!)</option>
@@ -54,6 +56,11 @@
                         <option value="OFF">🔇 Matikan Suara</option>
                     </select>
                 </div>
+
+                <!-- TOMBOL DOWNLOAD LAPORAN PDF -->
+                <button onclick="downloadPDF()" class="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-white font-cute px-4 py-3 rounded-2xl transition shadow-md cursor-pointer text-xs flex items-center justify-center gap-1 border-2 border-white">
+                    📥 Cetak PDF
+                </button>
             </div>
 
             <!-- Navigasi Mode Aplikasi -->
