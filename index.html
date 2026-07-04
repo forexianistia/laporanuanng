@@ -82,6 +82,26 @@
                 <!-- Di-generate melalui JS -->
             </section>
 
+            <!-- ========================================== -->
+            <!-- TAMBAHAN: MENU REKAP PEMASUKAN BULANAN -->
+            <!-- ========================================== -->
+            <section id="rekapBulananSection" class="mb-6 bg-white/95 backdrop-blur-xs p-5 rounded-3xl shadow-md border-4 border-[#E0F2FE]">
+                <h2 class="text-md font-cute mb-3 text-[#0369A1] border-b-2 border-dashed border-[#BAE6FD] pb-2 flex items-center gap-1.5">
+                    📊 Rekap Pemasukan Bulanan
+                </h2>
+                <!-- Daftar bulan akan di-generate otomatis oleh JavaScript di dalam div ini -->
+                <div id="listRekapBulanan" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <!-- Contoh Tampilan saat terisi data (Nanti di-render via JS):
+                    <div class="bg-[#F0F9FF] p-3 rounded-2xl border border-[#B9E6FE] text-center">
+                        <p class="text-xs font-bold text-slate-500">April 2026</p>
+                        <p class="text-sm font-cute text-[#0369A1]">Rp 5.000.000</p>
+                    </div> 
+                    -->
+                    <p class="text-xs text-slate-400 italic col-span-full text-center py-2">Belum ada data pemasukan bulanan... 🐾</p>
+                </div>
+            </section>
+            <!-- ========================================== -->
+
             <!-- GRID UTAMA: FORM & TABEL -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 
