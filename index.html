@@ -1,6 +1,6 @@
-<!-- JAVASCRIPT LOGIC (FIXED, OPTIMIZED & CURRENCY CONVERTER INTEGRATED) -->
+<!-- JAVASCRIPT LOGIC (FIXED, OPTIMIZED & ANTI-BUG RUNTIME) -->
 <script>
-    // Storage data initialization
+    // Storage data initialization dengan fallback array kosong yang aman
     let currentMode = 'keuangan'; // 'keuangan' atau 'tabungan'
     let dbKeuangan = JSON.parse(localStorage.getItem('jurnalKeuangan')) || [];
     let dbTabungan = JSON.parse(localStorage.getItem('jurnalTabungan')) || [];
@@ -12,10 +12,13 @@
     const KURS_USD_TO_IDR = 17994.40;
     const KURS_CENT_TO_IDR = 179.944;
 
-    // Sound FX System using Web Audio API
+    // Sound FX System using Web Audio API (Aman dari Autoplay Block)
     function playSuccessSound() {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
             
             let osc1 = audioCtx.createOscillator();
             let gain1 = audioCtx.createGain();
@@ -29,22 +32,26 @@
             osc1.stop(audioCtx.currentTime + 0.15);
 
             setTimeout(() => {
-                let osc2 = audioCtx.createOscillator();
-                let gain2 = audioCtx.createGain();
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-                gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                osc2.connect(gain2);
-                gain2.connect(audioCtx.destination);
-                osc2.start();
-                osc2.stop(audioCtx.currentTime + 0.2);
+                try {
+                    let osc2 = audioCtx.createOscillator();
+                    let gain2 = audioCtx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+                    gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.start();
+                    osc2.stop(audioCtx.currentTime + 0.2);
+                } catch(e) {}
             }, 70);
         } catch(e) { console.log("AudioContext not supported or blocked"); }
     }
 
+    // Fungsi format rupiah dengan proteksi nilai non-number
     function formatRupiah(angka) {
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        const nilai = parseFloat(angka) || 0;
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(nilai);
     }
 
     // Custom Central Modal Handler
@@ -55,6 +62,8 @@
         const mMsg = document.getElementById('modalMessage');
         const mIcon = document.getElementById('modalIcon');
         const btnContainer = document.getElementById('modalActionButtons');
+
+        if (!modal || !box) return; // Proteksi jika elemen DOM belum siap
 
         mTitle.innerText = title;
         mMsg.innerText = message;
@@ -89,7 +98,7 @@
         }
 
         modal.classList.remove('pointer-events-none', 'opacity-0');
-        modal.classList.add('opacity-1');
+        modal.classList.add('opacity-100');
         box.classList.remove('scale-95');
         box.classList.add('scale-100');
     }
@@ -97,8 +106,9 @@
     function closeModal() {
         const modal = document.getElementById('customModal');
         const box = document.getElementById('modalBox');
+        if (!modal || !box) return;
         modal.classList.add('pointer-events-none', 'opacity-0');
-        modal.classList.remove('opacity-1');
+        modal.classList.remove('opacity-100');
         box.classList.add('scale-95');
         box.classList.remove('scale-100');
     }
@@ -112,16 +122,16 @@
         resetForm();
 
         if (mode === 'keuangan') {
-            btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
-            btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
+            if(btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
+            if(btnTabungan) btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
             
             document.getElementById('labelToko').innerText = "Nama Toko / Instansi Sumber";
             document.getElementById('labelDetail').innerText = "Detail Barang / Keterangan";
             document.getElementById('kategoriContainer').classList.remove('hidden');
             document.getElementById('tableTitle').innerText = "📈 Histori Transaksi Bulan Ini";
         } else {
-            btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
-            btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
+            if(btnTabungan) btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
+            if(btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
             
             document.getElementById('labelToko').innerText = "Nama Akun Tabungan / Wadah";
             document.getElementById('labelDetail').innerText = "Tujuan / Goal Menabung";
@@ -137,7 +147,9 @@
         const headerRow = document.getElementById('tableHeaderRow');
         const tbody = document.getElementById('tabelBody');
         
-        // Set input date to today default if empty
+        if (!summary || !headerRow || !tbody) return; // Mencegah crash jika DOM belum termuat sempurna
+        
+        // Atur default tanggal hari ini jika kosong
         if(!document.getElementById('tanggal').value) {
             document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
         }
@@ -161,20 +173,21 @@
                 <th class="p-3 text-center">Aksi</th>
             `;
 
-            let totalPemasukan = dbKeuangan.filter(x => x.jenis === 'Pemasukan').reduce((acc, c) => acc + parseFloat(c.jumlah), 0);
-            let totalPengeluaran = dbKeuangan.filter(x => x.jenis === 'Pengeluaran').reduce((acc, c) => acc + parseFloat(c.jumlah), 0);
+            // Proteksi parseFloat untuk menghindari penumpukan NaN
+            let totalPemasukan = dbKeuangan.filter(x => x.jenis === 'Pemasukan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
+            let totalPengeluaran = dbKeuangan.filter(x => x.jenis === 'Pengeluaran').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
             let saldoAkhir = totalPemasukan - totalPengeluaran;
 
             summary.innerHTML = `
-                <div class="bg-emerald-50/90 p-4 rounded-xl border border-emerald-200 shadow-xs">
+                <div class="bg-emerald-50/90 p-4 rounded-xl border border-emerald-200 shadow-sm">
                     <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Total Pemasukan</p>
                     <p class="text-2xl font-black text-emerald-700">${formatRupiah(totalPemasukan)}</p>
                 </div>
-                <div class="bg-rose-50/90 p-4 rounded-xl border border-rose-200 shadow-xs">
+                <div class="bg-rose-50/90 p-4 rounded-xl border border-rose-200 shadow-sm">
                     <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Total Pengeluaran</p>
                     <p class="text-2xl font-black text-rose-700">${formatRupiah(totalPengeluaran)}</p>
                 </div>
-                <div class="bg-amber-50/90 p-4 rounded-xl border border-amber-200 shadow-xs">
+                <div class="bg-amber-50/90 p-4 rounded-xl border border-amber-200 shadow-sm">
                     <p class="text-xs font-bold text-amber-700 uppercase tracking-wider">Saldo Dompet Akhir</p>
                     <p class="text-2xl font-black text-slate-800">${formatRupiah(saldoAkhir)}</p>
                 </div>
@@ -190,9 +203,9 @@
                     tr.innerHTML = `
                         <td class="p-3 whitespace-nowrap">${item.tanggal}</td>
                         <td class="p-3 font-semibold text-slate-800">${item.namaToko || '-'}</td>
-                        <td class="p-3">${item.keterangan}</td>
+                        <td class="p-3">${item.keterangan || '-'}</td>
                         <td class="p-3 max-w-[150px] truncate" title="${item.alasan || '-'}">${item.alasan || '<span class="text-slate-300">-</span>'}</td>
-                        <td class="p-3"><span class="px-2 py-0.5 text-xs bg-slate-200 text-slate-700 rounded-full font-medium">${item.kategori}</span></td>
+                        <td class="p-3"><span class="px-2 py-0.5 text-xs bg-slate-200 text-slate-700 rounded-full font-medium">${item.kategori || 'Umum'}</span></td>
                         <td class="p-3 font-bold ${item.jenis === 'Pemasukan' ? 'text-emerald-600' : 'text-rose-600'}">${item.jenis}</td>
                         <td class="p-3 text-right font-bold text-slate-800">${formatRupiah(item.jumlah)}</td>
                         <td class="p-3 text-center space-x-1 whitespace-nowrap">
@@ -220,12 +233,12 @@
                 <th class="p-3 text-center">Aksi</th>
             `;
 
-            let totalSimpanan = dbTabungan.filter(x => x.jenis === 'Simpanan').reduce((acc, c) => acc + parseFloat(c.jumlah), 0);
-            let totalPenarikan = dbTabungan.filter(x => x.jenis === 'Penarikan').reduce((acc, c) => acc + parseFloat(c.jumlah), 0);
+            let totalSimpanan = dbTabungan.filter(x => x.jenis === 'Simpanan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
+            let totalPenarikan = dbTabungan.filter(x => x.jenis === 'Penarikan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
             let totalCelengan = totalSimpanan - totalPenarikan;
 
             summary.innerHTML = `
-                <div class="bg-amber-100/80 p-4 rounded-xl border border-amber-300 shadow-xs md:col-span-3 text-center">
+                <div class="bg-amber-100/80 p-4 rounded-xl border border-amber-300 shadow-sm md:col-span-3 text-center">
                     <p class="text-xs font-bold text-amber-800 uppercase tracking-wider">Total Seluruh Celengan Tabungan Berjalan</p>
                     <p class="text-3xl font-black text-amber-900">${formatRupiah(totalCelengan)}</p>
                 </div>
@@ -241,7 +254,7 @@
                     tr.innerHTML = `
                         <td class="p-3 whitespace-nowrap">${item.tanggal}</td>
                         <td class="p-3 font-semibold text-slate-800">${item.namaToko || '-'}</td>
-                        <td class="p-3">${item.keterangan}</td>
+                        <td class="p-3">${item.keterangan || '-'}</td>
                         <td class="p-3 max-w-[150px] truncate" title="${item.alasan || '-'}">${item.alasan || '<span class="text-slate-300">-</span>'}</td>
                         <td class="p-3 font-bold ${item.jenis === 'Simpanan' ? 'text-amber-600' : 'text-slate-500'}">${item.jenis === 'Simpanan' ? '📥 Simpan' : '📤 Ambil'}</td>
                         <td class="p-3 text-right font-bold text-slate-800">${formatRupiah(item.jumlah)}</td>
@@ -267,18 +280,28 @@
         const kategori = document.getElementById('kategori').value;
         const jenis = document.getElementById('jenis').value;
         
-        // AMBIL INPUT MATA UANG (Pastikan di HTML elemen ID 'mataUang' sudah ada, default ke IDR jika belum ada)
         const elemenMataUang = document.getElementById('mataUang');
         const jenisMataUang = elemenMataUang ? elemenMataUang.value : 'IDR';
         
         let jumlahInput = parseFloat(document.getElementById('jumlah').value) || 0;
         let jumlah = jumlahInput;
 
-        // LOGIKA INTERSEPSI DAN KONVERSI MATA UANG OTOMATIS
+        // Logika konversi mata uang otomatis yang aman
         if (jenisMataUang === 'USD') {
             jumlah = Math.round(jumlahInput * KURS_USD_TO_IDR);
         } else if (jenisMataUang === 'CENT') {
             jumlah = Math.round(jumlahInput * KURS_CENT_TO_IDR);
+        }
+
+        // Validasi ekstra agar jumlah tidak minus atau bernilai 0
+        if (jumlah <= 0) {
+            showModal({
+                title: "Input Tidak Valid",
+                message: "Jumlah nominal uang yang dimasukkan harus lebih besar dari 0!",
+                type: "warning",
+                showCancel: false
+            });
+            return;
         }
 
         if (id) {
@@ -287,6 +310,7 @@
                 dbKeuangan = dbKeuangan.map(x => x.id === id ? { id, tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah } : x);
                 localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
             } else {
+                // Di mode tabungan, properti kategori sengaja dihilangkan agar skema databasenya bersih
                 dbTabungan = dbTabungan.map(x => x.id === id ? { id, tanggal, namaToko, keterangan, alasan, jenis, jumlah } : x);
                 localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
             }
@@ -298,17 +322,14 @@
                 showCancel: false
             });
         } else {
-            // Submit New Data Insert
-            const dataBaru = {
-                id: Date.now().toString(),
-                tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah
-            };
-
+            // Submit New Data Insert dengan memisahkan payload berdasarkan skema mode aktif
             if (currentMode === 'keuangan') {
-                dbKeuangan.push(dataBaru);
+                const dataBaruKeuangan = { id: Date.now().toString(), tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah };
+                dbKeuangan.push(dataBaruKeuangan);
                 localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
             } else {
-                dbTabungan.push(dataBaru);
+                const dataBaruTabungan = { id: Date.now().toString(), tanggal, namaToko, keterangan, alasan, jenis, jumlah };
+                dbTabungan.push(dataBaruTabungan);
                 localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
             }
         }
@@ -331,31 +352,38 @@
             onConfirm: () => {
                 document.getElementById('dataId').value = target.id;
                 document.getElementById('tanggal').value = target.tanggal;
-                document.getElementById('namaToko').value = target.namaToko;
-                document.getElementById('keterangan').value = target.keterangan;
+                document.getElementById('namaToko').value = target.namaToko || '';
+                document.getElementById('keterangan').value = target.keterangan || '';
                 document.getElementById('alasan').value = target.alasan || '';
                 document.getElementById('jenis').value = target.jenis;
-                document.getElementById('jumlah').value = target.jumlah; // Edit akan otomatis memuat nilai IDR bersih yang tersimpan
-                if (currentMode === 'keuangan') document.getElementById('kategori').value = target.kategori;
+                document.getElementById('jumlah').value = target.jumlah; 
+                
+                if (currentMode === 'keuangan') {
+                    document.getElementById('kategori').value = target.kategori || 'Umum';
+                }
 
-                // Reset pilihan mata uang kembali ke IDR saat mode edit agar tidak memicu double conversion secara tidak sengaja
+                // Reset pilihan mata uang ke IDR saat mode edit agar tidak memicu double-conversion tidak sengaja
                 const elemenMataUang = document.getElementById('mataUang');
                 if (elemenMataUang) elemenMataUang.value = 'IDR';
 
                 document.getElementById('formTitle').innerText = "🔄 Mode Edit Data";
                 document.getElementById('submitBtn').innerText = "Simpan Perubahan";
-                document.getElementById('cancelBtn').classList.remove('hidden');
+                
+                const cancelBtn = document.getElementById('cancelBtn');
+                if(cancelBtn) cancelBtn.classList.remove('hidden');
             }
         });
     }
 
     function resetForm() {
-        form.reset();
+        if(form) form.reset();
         document.getElementById('dataId').value = '';
         document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
         document.getElementById('formTitle').innerText = "📝 Tambah Catatan";
         document.getElementById('submitBtn').innerText = currentMode === 'keuangan' ? "Simpan Transaksi" : "Simpan Tabungan";
-        document.getElementById('cancelBtn').classList.add('hidden');
+        
+        const cancelBtn = document.getElementById('cancelBtn');
+        if(cancelBtn) cancelBtn.classList.add('hidden');
         
         const elemenMataUang = document.getElementById('mataUang');
         if (elemenMataUang) elemenMataUang.value = 'IDR';
@@ -365,10 +393,11 @@
         pendingDeleteId = id;
         let database = currentMode === 'keuangan' ? dbKeuangan : dbTabungan;
         const target = database.find(x => x.id === id);
+        if (!target) return;
         
         showModal({
             title: "Hapus Catatan Ini?",
-            message: `Tindakan ini permanen. Catatan "${target.keterangan}" seharga ${formatRupiah(target.jumlah)} akan terhapus total dari browser.`,
+            message: `Tindakan ini permanen. Catatan "${target.keterangan || target.namaToko}" seharga ${formatRupiah(target.jumlah)} akan terhapus total dari browser.`,
             type: "danger",
             confirmText: "Ya, Hapus Data",
             onConfirm: eksekusiHapus
@@ -392,6 +421,8 @@
         renderView();
     }
 
-    // Initialize display app state
-    renderView();
+    // Jalankan inisialisasi awal saat dokumen siap
+    document.addEventListener("DOMContentLoaded", function() {
+        renderView();
+    });
 </script>
