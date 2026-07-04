@@ -99,6 +99,14 @@ function updatePosisiGif() {
     animationFrameId = requestAnimationFrame(updatePosisiGif);
 }
 
+// Menangani perubahan ukuran layar agar gif tidak terperangkap di luar window
+window.addEventListener('resize', () => {
+    activeGifs.forEach(obj => {
+        if (obj.x + obj.width > window.innerWidth) obj.x = window.innerWidth - obj.width;
+        if (obj.y + obj.height > window.innerHeight) obj.y = window.innerHeight - obj.height;
+    });
+});
+
 // --- SISTEM KUSTOM AUDIO SYNTHESIZER BUBU DUDU ---
 let audioCtx = null;
 
@@ -246,7 +254,8 @@ function switchMode(mode) {
         if (labelToko) labelToko.innerText = "🏪 Toko / Sumber Uang";
         if (labelDetail) labelDetail.innerText = "🍭 Keterangan Barang";
         if (katContainer) katContainer.classList.remove('hidden');
-        if (tTitle) tTitle.innerText = "📈 Histori Keuangan Bulanan";
+        // --- PERBAIKAN: Judul disinkronkan dengan total akumulatif request istrimu ---
+        if (tTitle) tTitle.innerText = "📈 Semua Histori Keuangan (Total)";
     } else {
         if (btnTabungan) btnTabungan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
         if (btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]";
@@ -286,26 +295,28 @@ function renderView() {
             `;
         }
 
+        // --- OPTIMASI REQUEST ISTRI: Menghitung TOTAL KESELURUHAN tanpa filter bulan ---
         let totalPemasukan = dbKeuangan.filter(x => x.jenis === 'Pemasukan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
         let totalPengeluaran = dbKeuangan.filter(x => x.jenis === 'Pengeluaran').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
         
         if (summary) {
             summary.innerHTML = `
                 <div class="bg-[#E0FFFF]/90 backdrop-blur-xs p-3 rounded-2xl border-2 border-sky-200 shadow-xs">
-                    <p class="text-[10px] font-bold text-sky-600 uppercase">🎁 Total Masuk</p>
+                    <p class="text-[10px] font-bold text-sky-600 uppercase">🎁 Total Masuk (Semua)</p>
                     <p class="text-md font-cute text-sky-700">${formatRupiah(totalPemasukan)}</p>
                 </div>
                 <div class="bg-[#FFE4E1]/90 backdrop-blur-xs p-3 rounded-2xl border-2 border-rose-200 shadow-xs">
-                    <p class="text-[10px] font-bold text-rose-500 uppercase">💸 Total Keluar</p>
+                    <p class="text-[10px] font-bold text-rose-500 uppercase">💸 Total Keluar (Semua)</p>
                     <p class="text-md font-cute text-rose-600">${formatRupiah(totalPengeluaran)}</p>
                 </div>
                 <div class="bg-[#FFF0F5]/90 backdrop-blur-xs p-3 rounded-2xl border-2 border-purple-200 shadow-xs">
-                    <p class="text-[10px] font-bold text-purple-500 uppercase">👛 Sisa Dompet</p>
+                    <p class="text-[10px] font-bold text-purple-500 uppercase">👛 Sisa Dompet Total</p>
                     <p class="text-md font-cute text-[#D2691E]">${formatRupiah(totalPemasukan - totalPengeluaran)}</p>
                 </div>
             `;
         }
 
+        // Untuk tabel di bawahnya, tetap kita urutkan dari yang paling baru dimasukkan
         dbKeuangan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
         if (dbKeuangan.length === 0) {
             tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Belum ada catatan keuangan harian.</td></tr>`;
@@ -330,6 +341,7 @@ function renderView() {
             });
         }
     } else {
+        // --- MODE TABUNGAN ---
         if (selectJenis) {
             selectJenis.innerHTML = `
                 <option value="Simpanan">📥 Masuk Tabungan (+)</option>
@@ -397,6 +409,7 @@ if (form) {
         let jumlahInput = parseFloat(document.getElementById('jumlah')?.value) || 0;
         let jumlah = jumlahInput;
 
+        // Hanya konversi jika data baru atau mata uang sengaja diganti ke USD/CENT
         if (mataUang === 'USD') jumlah = Math.round(jumlahInput * KURS_USD_TO_IDR);
         if (mataUang === 'CENT') jumlah = Math.round(jumlahInput * KURS_CENT_TO_IDR);
 
@@ -452,12 +465,12 @@ function siapkanEdit(id) {
             document.getElementById('keterangan').value = target.keterangan || '';
             document.getElementById('alasan').value = target.alasan || '';
             document.getElementById('jenis').value = target.jenis;
-            document.getElementById('jumlah').value = target.jumlah;
+            document.getElementById('jumlah').value = target.jumlah; // Berupa Rupiah tersimpan
             
             if (currentMode === 'keuangan') {
                 document.getElementById('kategori').value = target.kategori || 'Umum';
             }
-            document.getElementById('mataUang').value = 'IDR';
+            document.getElementById('mataUang').value = 'IDR'; // Set default ke IDR saat edit agar tidak terkonversi ganda
             document.getElementById('formTitle').innerText = "🔄 Mode Edit Data";
             document.getElementById('submitBtn').innerText = "Simpan Perubahan ✨";
             
@@ -596,7 +609,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const selectMenuFont = document.getElementById('menuFont');
     if (selectMenuFont) {
         selectMenuFont.value = fontTersimpan;
-        // Tambahkan event listener ganti font langsung saat dropdown berubah
         selectMenuFont.addEventListener('change', function() {
             gantiFontAplikasi(this.value);
         });
