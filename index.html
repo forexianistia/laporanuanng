@@ -6,7 +6,7 @@
     <title>🧸Catatan Keuangan Dudu Bubu🧸</title>
     <!-- Tailwind CSS & Google Fonts (5 Pilihan Font Imut + Quicksand) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&family=Pacifico&family=Comfortaa:wght@700&family=Chilanka&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght=500;700&family=Pacifico&family=Comfortaa:wght=700&family=Chilanka&family=Patrick+Hand&display=swap" rel="stylesheet">
     <!-- Hubungkan ke file CSS eksternal -->
     <link rel="stylesheet" href="bubu-style.css">
     <!-- LIBRARY PEMBUAT PDF (html2pdf.js) -->
@@ -15,159 +15,164 @@
 <!-- Mengubah Background Utama Menjadi Yellow Pastel (#FFF9E6) -->
 <body class="text-slate-700 min-h-screen pb-12 relative bg-[#FFF9E6]" id="mainBody">
 
-    <!-- CONTAINER BACKGROUND ANIMASI GIF -->
-    <div id="bg-container"></div>
-
-    <!-- UTAMA APPLICATION CONTEXT -->
-    <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 relative z-10">
+    <!-- AREA UTAMA YANG AKAN DI-DOWNLOAD (Bungkus GIF dan Konten Jadi Satu) -->
+    <div id="cetak-area" class="relative min-h-screen bg-[#FFF9E6]">
         
-        <!-- HEADER UTAMA WITH BUBU DUDU THEME -->
-        <header class="mb-6 relative flex flex-col md:flex-row justify-between items-center gap-4 bg-white/95 backdrop-blur-xs p-6 rounded-3xl shadow-md border-4 border-[#FFDAB9]">
-            <div class="flex items-center gap-4 text-center md:text-left">
-                <div class="w-16 h-16 bg-[#FEE180] rounded-full flex items-center justify-center text-3xl shadow-inner border-2 border-white animate-bounce">🐼</div>
-                <div>
-                    <!-- Judul yang Lebih Lucu dan Imut -->
-                    <h1 class="text-2xl font-cute text-[#D2691E] tracking-wide">🎀 Jurnal Keuangan Chiwi-Chiwi Bubu Dudu 🎀</h1>
-                    <p class="text-xs text-rose-450 font-bold italic">Catat uang jajan & celengan impian biar ga boros beli bakso, mwah! 💖🍿</p>
-                </div>
-            </div>
+        <!-- CONTAINER BACKGROUND ANIMASI GIF (Sekarang Berada di Dalam Area Cetak) -->
+        <div id="bg-container" class="absolute inset-0 pointer-events-none z-0 overflow-hidden"></div>
 
-            <!-- KONTROL PENGATURAN & DOWNLOAD -->
-            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
-                <!-- MENU PILIHAN FONT IMUT (5 VARIAN) -->
-                <div class="bg-[#F0FFF4] p-3 rounded-2xl border-2 border-[#A7F3D0] flex flex-col items-center gap-1.5 w-full sm:w-40">
-                    <label class="text-xs font-cute text-[#059669] flex items-center gap-1">🔤 Ganti Font Ketik:</label>
-                    <select id="menuFont" onchange="gantiFontAplikasi(this.value)" class="text-xs font-bold p-1.5 bg-white border border-[#A7F3D0] rounded-xl focus:outline-none text-slate-700 cursor-pointer w-full">
-                        <option value="font-fredoka">🧸 Fredoka One (Chubby)</option>
-                        <option value="font-quicksand">🐾 Quicksand (Bulat Halus)</option>
-                        <option value="font-pacifico">🍦 Pacifico (Tulisan Tangan Aesthetic)</option>
-                        <option value="font-comfortaa">🍭 Comfortaa (Modern Bulat)</option>
-                        <option value="font-patrick">🎨 Patrick Hand (Santai/Komik)</option>
-                    </select>
-                </div>
-
-                <!-- MENU SUARA KETIK (SOUND MENU) -->
-                <div class="bg-[#FFF0F5] p-3 rounded-2xl border-2 border-[#FFB6C1] flex flex-col items-center gap-1.5 w-full sm:w-40">
-                    <label class="text-xs font-cute text-[#FF69B4] flex items-center gap-1">🎵 Pilih Suara Bubu Dudu:</label>
-                    <select id="menuSuara" class="text-xs font-bold p-1.5 bg-white border border-[#FFB6C1] rounded-xl focus:outline-none text-slate-700 cursor-pointer w-full">
-                        <option value="1">🐾 Suara 1 (Yatta/Cute!)</option>
-                        <option value="2">🐾 Suara 2 (Wawaa/Ngambek)</option>
-                        <option value="3">🐾 Suara 3 (Aaa~ Katta!)</option>
-                        <option value="OFF">🔇 Matikan Suara</option>
-                    </select>
-                </div>
-
-                <!-- TOMBOL DOWNLOAD LAPORAN PDF -->
-                <button onclick="downloadPDF()" class="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-white font-cute px-4 py-3 rounded-2xl transition shadow-md cursor-pointer text-xs flex items-center justify-center gap-1 border-2 border-white">
-                    📥 Cetak PDF
-                </button>
-            </div>
-
-            <!-- Navigasi Mode Aplikasi -->
-            <div class="flex bg-[#FDF5E6] p-1.5 rounded-2xl w-full md:w-60 border-2 border-[#FFE4C4] shrink-0">
-                <button id="tabKeuangan" onclick="switchMode('keuangan')" class="w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm">
-                    Keuangan
-                </button>
-                <button id="tabTabungan" onclick="switchMode('tabungan')" class="w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]">
-                    Tabungan
-                </button>
-            </div>
-        </header>
-
-        <!-- KARTU RINGKASAN SALDO IMUT -->
-        <section id="summarySection" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <!-- Di-generate melalui JS -->
-        </section>
-
-        <!-- GRID UTAMA: FORM & TABEL -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- UTAMA APPLICATION CONTEXT -->
+        <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 relative z-10">
             
-            <!-- KIRI: FORMULIR INPUT IMUT -->
-            <div class="bg-white/95 backdrop-blur-xs p-5 rounded-3xl shadow-md border-4 border-[#FFB6C1] lg:col-span-1">
-                <h2 id="formTitle" class="text-md font-cute mb-3 text-[#D2691E] border-b-2 border-dashed border-[#FFDAB9] pb-2 flex items-center gap-1.5">📝 Tambah Catatan</h2>
-                
-                <form id="mainForm" class="space-y-3.5">
-                    <input type="hidden" id="dataId">
-
+            <!-- HEADER UTAMA WITH BUBU DUDU THEME -->
+            <header class="mb-6 relative flex flex-col md:flex-row justify-between items-center gap-4 bg-white/95 backdrop-blur-xs p-6 rounded-3xl shadow-md border-4 border-[#FFDAB9]">
+                <div class="flex items-center gap-4 text-center md:text-left">
+                    <div class="w-16 h-16 bg-[#FEE180] rounded-full flex items-center justify-center text-3xl shadow-inner border-2 border-white animate-bounce">🐼</div>
                     <div>
-                        <label class="block text-xs font-bold text-[#CD853F] mb-1">📅 Tanggal</label>
-                        <input type="date" id="tanggal" required class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs font-bold">
+                        <!-- Judul yang Lebih Lucu dan Imut -->
+                        <h1 class="text-2xl font-cute text-[#D2691E] tracking-wide">🎀 Jurnal Keuangan Chiwi-Chiwi Bubu Dudu 🎀</h1>
+                        <p class="text-xs text-rose-450 font-bold italic">Catat uang jajan & celengan impian biar ga boros beli bakso, mwah! 💖🍿</p>
                     </div>
-
-                    <div>
-                        <label id="labelToko" class="block text-xs font-bold text-[#CD853F] mb-1">🏪 Toko / Sumber Uang</label>
-                        <input type="text" id="namaToko" required placeholder="Contoh: Beli Bakso, Uang jajan mami" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs input-efek-suara">
-                    </div>
-
-                    <div>
-                        <label id="labelDetail" class="block text-xs font-bold text-[#CD853F] mb-1">🍭 Keterangan Barang</label>
-                        <input type="text" id="keterangan" required placeholder="Contoh: Martabak manis, es teh" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs input-efek-suara">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-[#CD853F] mb-1">💬 Alasan / Catatan Penting</label>
-                        <textarea id="alasan" rows="2" placeholder="Beli karena laper banget..." class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs input-efek-suara"></textarea>
-                    </div>
-
-                    <div id="kategoriContainer">
-                        <label class="block text-xs font-bold text-[#CD853F] mb-1">🏷️ Kategori</label>
-                        <select id="kategori" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs font-bold text-slate-600">
-                            <option value="Makanan">🍔 Makanan & Minuman</option>
-                            <option value="Kebutuhan">🏠 Kebutuhan Kos/Rumah</option>
-                            <option value="Transportasi">🏍️ Bensin / Jalan-jalan</option>
-                            <option value="Hiburan">🎮 Game & Mainan</option>
-                            <option value="Pendapatan">💼 Rezeki Bulanan / Hasil Usaha</option>
-                            <option value="Umum">📦 Lain-lain / Umum</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-[#CD853F] mb-1">🔄 Aliran Dana</label>
-                        <select id="jenis" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs font-bold text-slate-700">
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-[#CD853F] mb-1">💰 Jumlah Uang</label>
-                        <div class="flex gap-1.5">
-                            <select id="mataUang" class="bg-[#FFE4E1] border border-[#FFB6C1] p-2 rounded-xl font-bold text-xs focus:outline-none text-slate-700">
-                                <option value="IDR">Rp</option>
-                                <option value="USD">$</option>
-                                <option value="CENT">¢</option>
-                            </select>
-                            <input type="number" id="jumlah" required min="1" placeholder="0" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl font-bold text-[#D2691E] text-xs focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] input-efek-suara">
-                        </div>
-                    </div>
-
-                    <div class="pt-1 space-y-1.5">
-                        <button type="submit" id="submitBtn" class="w-full bg-[#FFB6C1] hover:bg-[#FF9999] text-white font-cute p-2.5 rounded-xl transition shadow-sm cursor-pointer text-xs uppercase tracking-wider">
-                            Simpan Transaksi ✨
-                        </button>
-                        <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden w-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold p-2 rounded-xl transition cursor-pointer text-xs">
-                            Cancel Mode Edit
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- KANAN: TABEL HISTORI DATA IMUT -->
-            <div class="bg-white/95 backdrop-blur-xs p-5 rounded-3xl shadow-md border-4 border-[#FFDAB9] lg:col-span-2 overflow-hidden">
-                <h2 id="tableTitle" class="text-md font-cute mb-3 text-[#D2691E] border-b-2 border-dashed border-[#FFDAB9] pb-2 flex items-center gap-1.5">📈 Histori Bulan Ini</h2>
-                
-                <div class="overflow-x-auto w-full rounded-2xl border border-[#FFE4C4]">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr id="tableHeaderRow" class="bg-[#FFF8DC] text-[#CD853F] text-xs font-bold uppercase border-b-2 border-[#FFDAB9]">
-                            </tr>
-                        </thead>
-                        <tbody id="tabelBody" class="divide-y divide-rose-50/50 text-slate-700 text-xs">
-                        </tbody>
-                    </table>
                 </div>
-            </div>
 
+                <!-- KONTROL PENGATURAN & DOWNLOAD -->
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center data-html2pdf-ignore">
+                    <!-- MENU PILIHAN FONT IMUT (5 VARIAN) -->
+                    <div class="bg-[#F0FFF4] p-3 rounded-2xl border-2 border-[#A7F3D0] flex flex-col items-center gap-1.5 w-full sm:w-40">
+                        <label class="text-xs font-cute text-[#059669] flex items-center gap-1">🔤 Ganti Font:</label>
+                        <select id="menuFont" onchange="gantiFontAplikasi(this.value)" class="text-xs font-bold p-1.5 bg-white border border-[#A7F3D0] rounded-xl focus:outline-none text-slate-700 cursor-pointer w-full">
+                            <option value="font-fredoka">🧸 Fredoka One (Chubby)</option>
+                            <option value="font-quicksand">🐾 Quicksand (Bulat Halus)</option>
+                            <option value="font-pacifico">🍦 Pacifico (Tulisan Aesthetic)</option>
+                            <option value="font-comfortaa">🍭 Comfortaa (Modern Bulat)</option>
+                            <option value="font-patrick">🎨 Patrick Hand (Santai)</option>
+                        </select>
+                    </div>
+
+                    <!-- MENU SUARA KETIK (SOUND MENU) -->
+                    <div class="bg-[#FFF0F5] p-3 rounded-2xl border-2 border-[#FFB6C1] flex flex-col items-center gap-1.5 w-full sm:w-40">
+                        <label class="text-xs font-cute text-[#FF69B4] flex items-center gap-1">🎵 Pilih Suara Bubu Dudu:</label>
+                        <select id="menuSuara" class="text-xs font-bold p-1.5 bg-white border border-[#FFB6C1] rounded-xl focus:outline-none text-slate-700 cursor-pointer w-full">
+                            <option value="1">🐾 Suara 1 (Yatta!)</option>
+                            <option value="2">🐾 Suara 2 (Wawaa)</option>
+                            <option value="3">🐾 Suara 3 (Aaa~ Katta!)</option>
+                            <option value="OFF">🔇 Matikan Suara</option>
+                        </select>
+                    </div>
+
+                    <!-- TOMBOL DOWNLOAD LAPORAN PDF -->
+                    <button onclick="downloadPDF()" class="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-white font-cute px-4 py-3 rounded-2xl transition shadow-md cursor-pointer text-xs flex items-center justify-center gap-1 border-2 border-white">
+                        📥 Cetak PDF
+                    </button>
+                </div>
+
+                <!-- Navigasi Mode Aplikasi -->
+                <div class="flex bg-[#FDF5E6] p-1.5 rounded-2xl w-full md:w-60 border-2 border-[#FFE4C4] shrink-0 data-html2pdf-ignore">
+                    <button id="tabKeuangan" onclick="switchMode('keuangan')" class="w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm">
+                        Keuangan
+                    </button>
+                    <button id="tabTabungan" onclick="switchMode('tabungan')" class="w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]">
+                        Tabungan
+                    </button>
+                </div>
+            </header>
+
+            <!-- KARTU RINGKASAN SALDO IMUT -->
+            <section id="summarySection" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <!-- Di-generate melalui JS -->
+            </section>
+
+            <!-- GRID UTAMA: FORM & TABEL -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                
+                <!-- KIRI: FORMULIR INPUT IMUT -->
+                <div class="bg-white/95 backdrop-blur-xs p-5 rounded-3xl shadow-md border-4 border-[#FFB6C1] lg:col-span-1 data-html2pdf-ignore">
+                    <h2 id="formTitle" class="text-md font-cute mb-3 text-[#D2691E] border-b-2 border-dashed border-[#FFDAB9] pb-2 flex items-center gap-1.5">📝 Tambah Catatan</h2>
+                    
+                    <form id="mainForm" class="space-y-3.5">
+                        <input type="hidden" id="dataId">
+
+                        <div>
+                            <label class="block text-xs font-bold text-[#CD853F] mb-1">📅 Tanggal</label>
+                            <input type="date" id="tanggal" required class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs font-bold">
+                        </div>
+
+                        <div>
+                            <label id="labelToko" class="block text-xs font-bold text-[#CD853F] mb-1">🏪 Toko / Sumber Uang</label>
+                            <input type="text" id="namaToko" required placeholder="Contoh: Beli Bakso, Uang jajan mami" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs input-efek-suara">
+                        </div>
+
+                        <div>
+                            <label id="labelDetail" class="block text-xs font-bold text-[#CD853F] mb-1">🍭 Keterangan Barang</label>
+                            <input type="text" id="keterangan" required placeholder="Contoh: Martabak manis, es teh" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs input-efek-suara">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-[#CD853F] mb-1">💬 Alasan / Catatan Penting</label>
+                            <textarea id="alasan" rows="2" placeholder="Beli karena laper banget..." class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs input-efek-suara"></textarea>
+                        </div>
+
+                        <div id="kategoriContainer">
+                            <label class="block text-xs font-bold text-[#CD853F] mb-1">🏷️ Kategori</label>
+                            <select id="kategori" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs font-bold text-slate-600">
+                                <option value="Makanan">🍔 Makanan & Minuman</option>
+                                <option value="Kebutuhan">🏠 Kebutuhan Kos/Rumah</option>
+                                <option value="Transportasi">🏍️ Bensin / Jalan-jalan</option>
+                                <option value="Hiburan">🎮 Game & Mainan</option>
+                                <option value="Pendapatan">💼 Rezeki Bulanan / Hasil Usaha</option>
+                                <option value="Umum">📦 Lain-lain / Umum</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-[#CD853F] mb-1">🔄 Aliran Dana</label>
+                            <select id="jenis" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] text-xs font-bold text-slate-700">
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-[#CD853F] mb-1">💰 Jumlah Uang</label>
+                            <div class="flex gap-1.5">
+                                <select id="mataUang" class="bg-[#FFE4E1] border border-[#FFB6C1] p-2 rounded-xl font-bold text-xs focus:outline-none text-slate-700">
+                                    <option value="IDR">Rp</option>
+                                    <option value="USD">$</option>
+                                    <option value="CENT">¢</option>
+                                </select>
+                                <input type="number" id="jumlah" required min="1" placeholder="0" class="w-full bg-[#FFFBF0] border border-[#FFE4C4] p-2 rounded-xl font-bold text-[#D2691E] text-xs focus:outline-none focus:ring-2 focus:ring-[#FFB6C1] input-efek-suara">
+                            </div>
+                        </div>
+
+                        <div class="pt-1 space-y-1.5">
+                            <button type="submit" id="submitBtn" class="w-full bg-[#FFB6C1] hover:bg-[#FF9999] text-white font-cute p-2.5 rounded-xl transition shadow-sm cursor-pointer text-xs uppercase tracking-wider">
+                                Simpan Transaksi ✨
+                            </button>
+                            <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden w-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold p-2 rounded-xl transition cursor-pointer text-xs">
+                                Cancel Mode Edit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- KANAN: TABEL HISTORI DATA IMUT -->
+                <div class="bg-white/95 backdrop-blur-xs p-5 rounded-3xl shadow-md border-4 border-[#FFDAB9] lg:col-span-2 overflow-hidden">
+                    <h2 id="tableTitle" class="text-md font-cute mb-3 text-[#D2691E] border-b-2 border-dashed border-[#FFDAB9] pb-2 flex items-center gap-1.5">📈 Histori Bulan Ini</h2>
+                    
+                    <div class="overflow-x-auto w-full rounded-2xl border border-[#FFE4C4]">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr id="tableHeaderRow" class="bg-[#FFF8DC] text-[#CD853F] text-xs font-bold uppercase border-b-2 border-[#FFDAB9]">
+                                </tr>
+                            </thead>
+                            <tbody id="tabelBody" class="divide-y divide-rose-50/50 text-slate-700 text-xs">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
         </div>
-    </div>
+
+    </div> <!-- AKHIR AREA CETAK -->
 
     <!-- POPUP MODAL IMUT SYSTEM -->
     <div id="customModal" class="opacity-0 pointer-events-none fixed inset-0 bg-slate-900/30 backdrop-blur-xs flex items-center justify-center p-4 transition-all duration-300 z-50">
