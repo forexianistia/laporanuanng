@@ -23,10 +23,12 @@ const listFileGif = [
 
 const containerBg = document.getElementById('bg-container');
 const activeGifs = [];
+let animationFrameId = null;
 
 function inisialisasiGifLatar() {
     if (!containerBg) return;
     containerBg.innerHTML = ''; // Reset container untuk menghindari duplikasi rendering ganda
+    activeGifs.length = 0; // Bersihkan array referensi aktif
 
     listFileGif.forEach((namaFile) => {
         const img = document.createElement('img');
@@ -59,8 +61,9 @@ function inisialisasiGifLatar() {
         });
     });
 
-    // Jalankan siklus pembaruan posisi animasi frame demi frame secara konstan
-    requestAnimationFrame(updatePosisiGif);
+    // Jalankan siklus pembaruan posisi animasi secara konstan
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    animationFrameId = requestAnimationFrame(updatePosisiGif);
 }
 
 function updatePosisiGif() {
@@ -89,34 +92,43 @@ function updatePosisiGif() {
             obj.dy *= -1;
         }
 
-        // Terapkan posisi baru menggunakan akselerasi GPU (hardware-accelerated)
+        // Terapkan posisi baru menggunakan akselerasi GPU
         obj.element.style.transform = `translate3d(${obj.x}px, ${obj.y}px, 0)`;
     });
 
-    requestAnimationFrame(updatePosisiGif);
+    animationFrameId = requestAnimationFrame(updatePosisiGif);
 }
 
 // --- SISTEM KUSTOM AUDIO SYNTHESIZER BUBU DUDU ---
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx = null;
+
+function dapatkanAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+}
 
 function mainkanSuaraKetik() {
     const menuSuara = document.getElementById('menuSuara');
     if (!menuSuara) return;
     const modeSuara = menuSuara.value;
     if (modeSuara === 'OFF') return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const sekarang = audioCtx.currentTime;
+    
+    const ctx = dapatkanAudioContext();
+    if (ctx.state === 'suspended') ctx.resume();
+    const sekarang = ctx.currentTime;
     
     if (modeSuara === '1') {
         buatNada(659.25, sekarang, 0.05);
         buatNada(880.00, sekarang + 0.05, 0.08);
     } else if (modeSuara === '2') {
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(440, sekarang);
         osc.frequency.exponentialRampToValueAtTime(220, sekarang + 0.15);
-        gain.connect(audioCtx.destination); osc.connect(gain);
+        gain.connect(ctx.destination); osc.connect(gain);
         gain.gain.setValueAtTime(0.08, sekarang);
         gain.gain.exponentialRampToValueAtTime(0.01, sekarang + 0.15);
         osc.start(sekarang); osc.stop(sekarang + 0.15);
@@ -129,13 +141,14 @@ function mainkanSuaraKetik() {
 
 function buatNada(frekuensi, mulai, durasi) {
     try {
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
+        const ctx = dapatkanAudioContext();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(frekuensi, mulai);
         gain.gain.setValueAtTime(0.06, mulai);
         gain.gain.exponentialRampToValueAtTime(0.005, mulai + durasi);
-        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.connect(gain); gain.connect(ctx.destination);
         osc.start(mulai); osc.stop(mulai + durasi);
     } catch(e){}
 }
@@ -144,12 +157,8 @@ function buatNada(frekuensi, mulai, durasi) {
 function gantiFontAplikasi(namaFontBaru) {
     const body = document.getElementById('mainBody');
     if (body) {
-        // Bersihkan seluruh class font yang lama agar tidak bentrok
         body.classList.remove('font-fredoka', 'font-quicksand', 'font-pacifico', 'font-comfortaa', 'font-patrick');
-        // Masukkan font baru sesuai value dari dropdown select menu
         body.classList.add(namaFontBaru);
-        
-        // Simpan preferensi font di localStorage biar gak ke-reset saat refresh halaman
         localStorage.setItem('fontAplikasiPilihan', namaFontBaru);
     }
 }
@@ -370,7 +379,6 @@ function renderView() {
             });
         }
     }
-    // Re-attach audio effects to newly rendered view inputs if any
     pasangEfekSuaraKetik();
 }
 
@@ -389,7 +397,6 @@ if (form) {
         let jumlahInput = parseFloat(document.getElementById('jumlah')?.value) || 0;
         let jumlah = jumlahInput;
 
-        // Hitung konversi mata uang jika input baru, atau tetap pakai IDR murni jika dari mode edit IDR
         if (mataUang === 'USD') jumlah = Math.round(jumlahInput * KURS_USD_TO_IDR);
         if (mataUang === 'CENT') jumlah = Math.round(jumlahInput * KURS_CENT_TO_IDR);
 
@@ -398,6 +405,7 @@ if (form) {
             return;
         }
 
+        const ctx = dapatkanAudioContext();
         if (id) {
             if (currentMode === 'keuangan') {
                 dbKeuangan = dbKeuangan.map(x => x.id === id ? { id, tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah } : x);
@@ -408,18 +416,19 @@ if (form) {
             }
             showModal({ title: "Sukses!", message: "Catatan kamu berhasil diubah, mwah!", type: "success", showCancel: false });
         } else {
+            const newId = Date.now().toString();
             if (currentMode === 'keuangan') {
-                dbKeuangan.push({ id: Date.now().toString(), tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah });
+                dbKeuangan.push({ id: newId, tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah });
                 localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
             } else {
-                dbTabungan.push({ id: Date.now().toString(), tanggal, namaToko, keterangan, alasan, jenis, jumlah });
+                dbTabungan.push({ id: newId, tanggal, namaToko, keterangan, alasan, jenis, jumlah });
                 localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
             }
         }
 
-        buatNada(523.25, audioCtx.currentTime, 0.08);
-        buatNada(659.25, audioCtx.currentTime + 0.08, 0.08);
-        buatNada(783.99, audioCtx.currentTime + 0.16, 0.15);
+        buatNada(523.25, ctx.currentTime, 0.08);
+        buatNada(659.25, ctx.currentTime + 0.08, 0.08);
+        buatNada(783.99, ctx.currentTime + 0.16, 0.15);
 
         resetForm();
         renderView();
@@ -460,18 +469,22 @@ function siapkanEdit(id) {
 
 function resetForm() {
     if (form) form.reset();
-    document.getElementById('dataId').value = '';
-    document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+    const dataIdInput = document.getElementById('dataId');
+    if (dataIdInput) dataIdInput.value = '';
+    
+    const tanggalInput = document.getElementById('tanggal');
+    if (tanggalInput) tanggalInput.value = new Date().toISOString().split('T')[0];
+    
     document.getElementById('formTitle').innerText = "📝 Tambah Catatan";
     document.getElementById('submitBtn').innerText = currentMode === 'keuangan' ? "Simpan Transaksi ✨" : "Simpan Tabungan ✨";
     
     const cancelBtn = document.getElementById('cancelBtn');
     if (cancelBtn) cancelBtn.classList.add('hidden');
     
-    document.getElementById('mataUang').value = 'IDR';
+    const mataUangInput = document.getElementById('mataUang');
+    if (mataUangInput) mataUangInput.value = 'IDR';
 }
 
-// Handler khusus jika element tombol cancel diklik secara manual di UI HTML
 const cancelBtnHtml = document.getElementById('cancelBtn');
 if (cancelBtnHtml) {
     cancelBtnHtml.addEventListener('click', function(e) {
@@ -511,7 +524,7 @@ function eksekusiHapus() {
 
 function pasangEfekSuaraKetik() {
     document.querySelectorAll('.input-efek-suara').forEach(element => {
-        element.removeEventListener('input', mainkanSuaraKetik); // Hindari penumpukan ganda
+        element.removeEventListener('input', mainkanSuaraKetik);
         element.addEventListener('input', mainkanSuaraKetik);
     });
 }
@@ -526,12 +539,10 @@ function downloadPDF() {
         return;
     }
 
-    // Membuat wrapper kloningan agar layout aslinya tidak berantakan
     const wrapperKloning = document.createElement('div');
     wrapperKloning.style.padding = '20px';
     wrapperKloning.style.fontFamily = 'sans-serif';
     
-    // Tambah header khusus cetak PDF harian/tabungan
     wrapperKloning.innerHTML = `
         <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px dashed #FFDAB9; padding-bottom: 10px;">
             <h1 style="color: #D2691E; margin: 0; font-size: 20px;">🧸 ${judulLaporan} 🧸</h1>
@@ -539,11 +550,9 @@ function downloadPDF() {
         </div>
     `;
 
-    // Gandakan tabel data, buang kolom "Aksi" paling kanan
     const tabelKloning = elemenTabel.cloneNode(true);
     const semuaBaris = tabelKloning.querySelectorAll('tr');
     
-    // PERBAIKAN: Mengganti variabel "semuasBaris" menjadi "semuaBaris" agar tidak crash
     semuaBaris.forEach(baris => {
         if (baris.lastElementChild) {
             baris.removeChild(baris.lastElementChild);
@@ -552,7 +561,6 @@ function downloadPDF() {
 
     wrapperKloning.appendChild(tabelKloning);
 
-    // Opsi output html2pdf
     const opsiPdf = {
         margin:       10,
         filename:     `${judulLaporan.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
@@ -561,11 +569,9 @@ function downloadPDF() {
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // Eksekusi download file aman dengan fallback cerdas
     if (typeof html2pdf !== 'undefined') {
         html2pdf().set(opsiPdf).from(wrapperKloning).save();
     } else {
-        // Fallback: Jika CDN html2pdf gagal termuat di html, gunakan window.print() bawaan sistem
         showModal({ 
             title: "Mengalihkan Cetak", 
             message: "Library PDF eksternal belum siap di halaman ini. Ingin mencetak menggunakan modul cetak browser? (Silakan pilih opsi 'Simpan sebagai PDF')", 
@@ -584,13 +590,15 @@ document.addEventListener("DOMContentLoaded", function() {
     inisialisasiGifLatar();
     pasangEfekSuaraKetik();
     
-    // Auto-load font yang tersimpan di memori lokal, default ke font-fredoka jika belum ada
     const fontTersimpan = localStorage.getItem('fontAplikasiPilihan') || 'font-fredoka';
     gantiFontAplikasi(fontTersimpan);
     
-    // Sinkronisasi value select dropdown agar sesuai dengan font aktif
     const selectMenuFont = document.getElementById('menuFont');
     if (selectMenuFont) {
         selectMenuFont.value = fontTersimpan;
+        // Tambahkan event listener ganti font langsung saat dropdown berubah
+        selectMenuFont.addEventListener('change', function() {
+            gantiFontAplikasi(this.value);
+        });
     }
 });
