@@ -27,23 +27,20 @@ let animationFrameId = null;
 
 function inisialisasiGifLatar() {
     if (!containerBg) return;
-    containerBg.innerHTML = ''; // Reset container untuk menghindari duplikasi rendering ganda
-    activeGifs.length = 0; // Bersihkan array referensi aktif
+    containerBg.innerHTML = ''; 
+    activeGifs.length = 0; 
 
     listFileGif.forEach((namaFile) => {
         const img = document.createElement('img');
         img.src = namaFile;
         img.className = 'floating-gif';
         
-        // Atur posisi awal acak di layar browser agar menyebar rata
         const posX = Math.random() * (window.innerWidth - 100);
         const posY = Math.random() * (window.innerHeight - 100);
         
-        // Menentukan arah gerak acak (Delta X & Delta Y)
         let dx = (Math.random() - 0.5) * 1.5;
         let dy = (Math.random() - 0.5) * 1.5;
         
-        // Menjaga agar tidak ada gambar yang diam di tempat (kecepatan minimum)
         if (Math.abs(dx) < 0.4) dx = dx < 0 ? -0.5 : 0.5;
         if (Math.abs(dy) < 0.4) dy = dy < 0 ? -0.5 : 0.5;
 
@@ -61,7 +58,6 @@ function inisialisasiGifLatar() {
         });
     });
 
-    // Jalankan siklus pembaruan posisi animasi secara konstan
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
     animationFrameId = requestAnimationFrame(updatePosisiGif);
 }
@@ -74,7 +70,6 @@ function updatePosisiGif() {
         obj.x += obj.dx;
         obj.y += obj.dy;
 
-        // Memantulkan arah gerakan jika menyentuh dinding samping browser
         if (obj.x <= 0) {
             obj.x = 0;
             obj.dx *= -1;
@@ -83,7 +78,6 @@ function updatePosisiGif() {
             obj.dx *= -1;
         }
 
-        // Memantulkan arah gerakan jika menyentuh langit-langit/lantai browser
         if (obj.y <= 0) {
             obj.y = 0;
             obj.dy *= -1;
@@ -92,14 +86,12 @@ function updatePosisiGif() {
             obj.dy *= -1;
         }
 
-        // Terapkan posisi baru menggunakan akselerasi GPU
         obj.element.style.transform = `translate3d(${obj.x}px, ${obj.y}px, 0)`;
     });
 
     animationFrameId = requestAnimationFrame(updatePosisiGif);
 }
 
-// Menangani perubahan ukuran layar agar gif tidak terperangkap di luar window
 window.addEventListener('resize', () => {
     activeGifs.forEach(obj => {
         if (obj.x + obj.width > window.innerWidth) obj.x = window.innerWidth - obj.width;
@@ -119,7 +111,7 @@ function dapatkanAudioContext() {
 
 function mainkanSuaraKetik() {
     const menuSuara = document.getElementById('menuSuara');
-    if (!menuSuara) return;
+    if (!menuSuara) return; // SAFE-GUARD: Jika element suara tidak ada di HTML, abaikan
     const modeSuara = menuSuara.value;
     if (modeSuara === 'OFF') return;
     
@@ -180,14 +172,11 @@ async function ambilKursTerbaru() {
         if (data.rates && data.rates.IDR) {
             KURS_USD_TO_IDR = data.rates.IDR;
             KURS_CENT_TO_IDR = data.rates.IDR / 100;
-            renderView();
         }
-    } catch (error) {
-        renderView();
-    }
+    } catch (error) {}
+    renderView(); // Tetap jalankan render meskipun API gagal diambil
 }
 
-// Load database awal aman dari crash parse
 try {
     dbKeuangan = JSON.parse(localStorage.getItem('jurnalKeuangan')) || [];
     dbTabungan = JSON.parse(localStorage.getItem('jurnalTabungan')) || [];
@@ -202,7 +191,18 @@ function formatRupiah(angka) {
 function showModal({ title, message, type, confirmText, onConfirm, showCancel = true }) {
     const modal = document.getElementById('customModal');
     const box = document.getElementById('modalBox');
-    if (!modal || !box) return;
+    if (!modal || !box) {
+        // Fallback jika modal kustom tidak ada di HTML, gunakan alert browser bawaan agar tidak eror
+        if (type !== 'danger' && !showCancel) {
+            alert(`${title}: ${message}`);
+            if (onConfirm) onConfirm();
+        } else {
+            if (confirm(`${title}\n\n${message}`)) {
+                if (onConfirm) onConfirm();
+            }
+        }
+        return;
+    }
 
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('modalMessage').innerText = message;
@@ -254,7 +254,6 @@ function switchMode(mode) {
         if (labelToko) labelToko.innerText = "🏪 Toko / Sumber Uang";
         if (labelDetail) labelDetail.innerText = "🍭 Keterangan Barang";
         if (katContainer) katContainer.classList.remove('hidden');
-        // --- PERBAIKAN: Judul disinkronkan dengan total akumulatif request istrimu ---
         if (tTitle) tTitle.innerText = "📈 Semua Histori Keuangan (Total)";
     } else {
         if (btnTabungan) btnTabungan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
@@ -295,7 +294,6 @@ function renderView() {
             `;
         }
 
-        // --- OPTIMASI REQUEST ISTRI: Menghitung TOTAL KESELURUHAN tanpa filter bulan ---
         let totalPemasukan = dbKeuangan.filter(x => x.jenis === 'Pemasukan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
         let totalPengeluaran = dbKeuangan.filter(x => x.jenis === 'Pengeluaran').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
         
@@ -316,7 +314,6 @@ function renderView() {
             `;
         }
 
-        // Untuk tabel di bawahnya, tetap kita urutkan dari yang paling baru dimasukkan
         dbKeuangan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
         if (dbKeuangan.length === 0) {
             tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Belum ada catatan keuangan harian.</td></tr>`;
@@ -341,7 +338,6 @@ function renderView() {
             });
         }
     } else {
-        // --- MODE TABUNGAN ---
         if (selectJenis) {
             selectJenis.innerHTML = `
                 <option value="Simpanan">📥 Masuk Tabungan (+)</option>
@@ -409,7 +405,6 @@ if (form) {
         let jumlahInput = parseFloat(document.getElementById('jumlah')?.value) || 0;
         let jumlah = jumlahInput;
 
-        // Hanya konversi jika data baru atau mata uang sengaja diganti ke USD/CENT
         if (mataUang === 'USD') jumlah = Math.round(jumlahInput * KURS_USD_TO_IDR);
         if (mataUang === 'CENT') jumlah = Math.round(jumlahInput * KURS_CENT_TO_IDR);
 
@@ -459,20 +454,20 @@ function siapkanEdit(id) {
         type: "info",
         confirmText: "Ya, Atur Form",
         onConfirm: () => {
-            document.getElementById('dataId').value = target.id;
-            document.getElementById('tanggal').value = target.tanggal;
-            document.getElementById('namaToko').value = target.namaToko || '';
-            document.getElementById('keterangan').value = target.keterangan || '';
-            document.getElementById('alasan').value = target.alasan || '';
-            document.getElementById('jenis').value = target.jenis;
-            document.getElementById('jumlah').value = target.jumlah; // Berupa Rupiah tersimpan
+            if(document.getElementById('dataId')) document.getElementById('dataId').value = target.id;
+            if(document.getElementById('tanggal')) document.getElementById('tanggal').value = target.tanggal;
+            if(document.getElementById('namaToko')) document.getElementById('namaToko').value = target.namaToko || '';
+            if(document.getElementById('keterangan')) document.getElementById('keterangan').value = target.keterangan || '';
+            if(document.getElementById('alasan')) document.getElementById('alasan').value = target.alasan || '';
+            if(document.getElementById('jenis')) document.getElementById('jenis').value = target.jenis;
+            if(document.getElementById('jumlah')) document.getElementById('jumlah').value = target.jumlah; 
             
-            if (currentMode === 'keuangan') {
+            if (currentMode === 'keuangan' && document.getElementById('kategori')) {
                 document.getElementById('kategori').value = target.kategori || 'Umum';
             }
-            document.getElementById('mataUang').value = 'IDR'; // Set default ke IDR saat edit agar tidak terkonversi ganda
-            document.getElementById('formTitle').innerText = "🔄 Mode Edit Data";
-            document.getElementById('submitBtn').innerText = "Simpan Perubahan ✨";
+            if(document.getElementById('mataUang')) document.getElementById('mataUang').value = 'IDR'; 
+            if(document.getElementById('formTitle')) document.getElementById('formTitle').innerText = "🔄 Mode Edit Data";
+            if(document.getElementById('submitBtn')) document.getElementById('submitBtn').innerText = "Simpan Perubahan ✨";
             
             const cancelBtn = document.getElementById('cancelBtn');
             if (cancelBtn) cancelBtn.classList.remove('hidden');
@@ -488,8 +483,8 @@ function resetForm() {
     const tanggalInput = document.getElementById('tanggal');
     if (tanggalInput) tanggalInput.value = new Date().toISOString().split('T')[0];
     
-    document.getElementById('formTitle').innerText = "📝 Tambah Catatan";
-    document.getElementById('submitBtn').innerText = currentMode === 'keuangan' ? "Simpan Transaksi ✨" : "Simpan Tabungan ✨";
+    if(document.getElementById('formTitle')) document.getElementById('formTitle').innerText = "📝 Tambah Catatan";
+    if(document.getElementById('submitBtn')) document.getElementById('submitBtn').innerText = currentMode === 'keuangan' ? "Simpan Transaksi ✨" : "Simpan Tabungan ✨";
     
     const cancelBtn = document.getElementById('cancelBtn');
     if (cancelBtn) cancelBtn.classList.add('hidden');
@@ -542,7 +537,7 @@ function pasangEfekSuaraKetik() {
     });
 }
 
-// --- FITUR DOWNLOAD LAPORAN PDF (VERSI PERBAIKAN & FALLBACK AMAN) ---
+// --- FITUR DOWNLOAD LAPORAN PDF ---
 function downloadPDF() {
     const elemenTabel = document.getElementById('tabelBody')?.parentElement;
     const judulLaporan = document.getElementById('tableTitle')?.innerText || 'Laporan Bubu Dudu';
