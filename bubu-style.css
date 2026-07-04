@@ -1,5 +1,8 @@
+/* Styling Utama Body */
 body { 
     font-family: 'Quicksand', sans-serif; 
+    background-color: #FFF9E6 !important; /* Fix Kuning Pastel Utama */
+    transition: font-family 0.3s ease;
 }
 
 .font-cute { 
@@ -16,7 +19,7 @@ body {
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
-    background-color: #FFF5EE;
+    background-color: #FFF9E6 !important; /* Fix Mengikuti Kuning Pastel */
 }
 
 /* Styling dasar untuk setiap karakter GIF yang meluncur */
@@ -29,3 +32,17 @@ body {
     user-select: none;
     will-change: transform;
 }
+
+/* --- DAFTAR CLASS FONT BARU UNTUK SELEKTOR DYNAMIC DROPDOWN --- */
+.font-fredoka { font-family: 'Fredoka One', cursive !important; }
+.font-quicksand { font-family: 'Quicksand', sans-serif !important; }
+.font-pacifico { font-family: 'Pacifico', cursive !important; }
+.font-comfortaa { font-family: 'Comfortaa', cursive !important; }
+.font-patrick { font-family: 'Patrick Hand', cursive !important; }
+
+/* Memastikan semua element input, tombol, dan form ikut berubah font-nya */
+.font-fredoka input, .font-fredoka textarea, .font-fredoka select, .font-fredoka button, .font-fredoka h1, .font-fredoka h2 { font-family: 'Fredoka One', cursive !important; }
+.font-quicksand input, .font-quicksand textarea, .font-quicksand select, .font-quicksand button, .font-quicksand h1, .font-quicksand h2 { font-family: 'Quicksand', sans-serif !important; }
+.font-pacifico input, .font-pacifico textarea, .font-pacifico select, .font-pacifico button, .font-pacifico h1, .font-pacifico h2 { font-family: 'Pacifico', cursive !important; }
+.font-comfortaa input, .font-comfortaa textarea, .font-comfortaa select, .font-comfortaa button, .font-comfortaa h1, .font-comfortaa h2 { font-family: 'Comfortaa', cursive !important; }
+.font-patrick input, .font-patrick textarea, .font-patrick select, .font-patrick button, .font-patrick h1, .font-patrick h2 { font-family: 'Patrick Hand', cursive !important; }
