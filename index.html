@@ -1,428 +1,504 @@
-<!-- JAVASCRIPT LOGIC (FIXED, OPTIMIZED & ANTI-BUG RUNTIME) -->
-<script>
-    // Storage data initialization dengan fallback array kosong yang aman
-    let currentMode = 'keuangan'; // 'keuangan' atau 'tabungan'
-    let dbKeuangan = JSON.parse(localStorage.getItem('jurnalKeuangan')) || [];
-    let dbTabungan = JSON.parse(localStorage.getItem('jurnalTabungan')) || [];
-    
-    const form = document.getElementById('mainForm');
-    let pendingDeleteId = null;
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurnal Keuangan & Tabungan Mandiri</title>
+    <!-- Tailwind CSS CDN untuk menjamin tampilan tidak berantakan -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen">
 
-    // KURS UPDATE TERKINI (2026)
-    const KURS_USD_TO_IDR = 17994.40;
-    const KURS_CENT_TO_IDR = 179.944;
+    <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- HEADER UTAMA -->
+        <header class="mb-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">💰 Jurnal Keuangan & Tabungan</h1>
+                <p class="text-sm text-slate-500">Pencatatan saldo harian otomatis berbasis lokal browser</p>
+            </div>
+            <!-- Navigasi Mode Aplikasi -->
+            <div class="flex bg-slate-100 p-1 rounded-xl w-full md:w-64 border border-slate-200">
+                <button id="tabKeuangan" onclick="switchMode('keuangan')" class="w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm">
+                    Keuangan
+                </button>
+                <button id="tabTabungan" onclick="switchMode('tabungan')" class="w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900">
+                    Tabungan
+                </button>
+            </div>
+        </header>
 
-    // Sound FX System using Web Audio API (Aman dari Autoplay Block)
-    function playSuccessSound() {
-        try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+        <!-- KARTU RINGKASAN SALDO (DIPERBARUI DINAMIS OLEH JS) -->
+        <section id="summarySection" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <!-- Isi Ringkasan Di-generate Otomatis Melalui JavaScript -->
+        </section>
+
+        <!-- GRID UTAMA: FORM & TABEL -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
-            let osc1 = audioCtx.createOscillator();
-            let gain1 = audioCtx.createGain();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-            gain1.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-            osc1.connect(gain1);
-            gain1.connect(audioCtx.destination);
-            osc1.start();
-            osc1.stop(audioCtx.currentTime + 0.15);
-
-            setTimeout(() => {
-                try {
-                    let osc2 = audioCtx.createOscillator();
-                    let gain2 = audioCtx.createGain();
-                    osc2.type = 'sine';
-                    osc2.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-                    gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                    osc2.connect(gain2);
-                    gain2.connect(audioCtx.destination);
-                    osc2.start();
-                    osc2.stop(audioCtx.currentTime + 0.2);
-                } catch(e) {}
-            }, 70);
-        } catch(e) { console.log("AudioContext not supported or blocked"); }
-    }
-
-    // Fungsi format rupiah dengan proteksi nilai non-number
-    function formatRupiah(angka) {
-        const nilai = parseFloat(angka) || 0;
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(nilai);
-    }
-
-    // Custom Central Modal Handler
-    function showModal({ title, message, type, confirmText, onConfirm, showCancel = true }) {
-        const modal = document.getElementById('customModal');
-        const box = document.getElementById('modalBox');
-        const mTitle = document.getElementById('modalTitle');
-        const mMsg = document.getElementById('modalMessage');
-        const mIcon = document.getElementById('modalIcon');
-        const btnContainer = document.getElementById('modalActionButtons');
-
-        if (!modal || !box) return; // Proteksi jika elemen DOM belum siap
-
-        mTitle.innerText = title;
-        mMsg.innerText = message;
-        btnContainer.innerHTML = '';
-
-        if (type === 'danger') {
-            mIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 bg-red-100 text-red-600";
-            mIcon.innerHTML = `⚠️`;
-        } else if (type === 'success') {
-            mIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 bg-green-100 text-green-600";
-            mIcon.innerHTML = `✓`;
-        } else {
-            mIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 bg-amber-100 text-amber-600";
-            mIcon.innerHTML = `ℹ️`;
-        }
-
-        const cBtn = document.createElement('button');
-        cBtn.className = `w-full text-white p-2 rounded-xl font-bold transition cursor-pointer text-sm ${type === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-slate-800 hover:bg-slate-900'}`;
-        cBtn.innerText = confirmText || 'OK';
-        cBtn.onclick = () => {
-            closeModal();
-            if (onConfirm) onConfirm();
-        };
-        btnContainer.appendChild(cBtn);
-
-        if (showCancel) {
-            const cancelBtn = document.createElement('button');
-            cancelBtn.className = "w-full bg-slate-200 text-slate-700 p-2 rounded-xl font-bold hover:bg-slate-300 transition cursor-pointer text-sm";
-            cancelBtn.innerText = 'Batal';
-            cancelBtn.onclick = closeModal;
-            btnContainer.appendChild(cancelBtn);
-        }
-
-        modal.classList.remove('pointer-events-none', 'opacity-0');
-        modal.classList.add('opacity-100');
-        box.classList.remove('scale-95');
-        box.classList.add('scale-100');
-    }
-
-    function closeModal() {
-        const modal = document.getElementById('customModal');
-        const box = document.getElementById('modalBox');
-        if (!modal || !box) return;
-        modal.classList.add('pointer-events-none', 'opacity-0');
-        modal.classList.remove('opacity-100');
-        box.classList.add('scale-95');
-        box.classList.remove('scale-100');
-    }
-
-    // Mode Navigation Controller
-    function switchMode(mode) {
-        currentMode = mode;
-        const btnKeuangan = document.getElementById('tabKeuangan');
-        const btnTabungan = document.getElementById('tabTabungan');
-        
-        resetForm();
-
-        if (mode === 'keuangan') {
-            if(btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
-            if(btnTabungan) btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
-            
-            document.getElementById('labelToko').innerText = "Nama Toko / Instansi Sumber";
-            document.getElementById('labelDetail').innerText = "Detail Barang / Keterangan";
-            document.getElementById('kategoriContainer').classList.remove('hidden');
-            document.getElementById('tableTitle').innerText = "📈 Histori Transaksi Bulan Ini";
-        } else {
-            if(btnTabungan) btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
-            if(btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
-            
-            document.getElementById('labelToko').innerText = "Nama Akun Tabungan / Wadah";
-            document.getElementById('labelDetail').innerText = "Tujuan / Goal Menabung";
-            document.getElementById('kategoriContainer').classList.add('hidden');
-            document.getElementById('tableTitle').innerText = "🐷 Histori Aliran Celengan Tabungan";
-        }
-
-        renderView();
-    }
-
-    function renderView() {
-        const summary = document.getElementById('summarySection');
-        const headerRow = document.getElementById('tableHeaderRow');
-        const tbody = document.getElementById('tabelBody');
-        
-        if (!summary || !headerRow || !tbody) return; // Mencegah crash jika DOM belum termuat sempurna
-        
-        // Atur default tanggal hari ini jika kosong
-        if(!document.getElementById('tanggal').value) {
-            document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
-        }
-        
-        tbody.innerHTML = '';
-
-        if (currentMode === 'keuangan') {
-            document.getElementById('jenis').innerHTML = `
-                <option value="Pengeluaran">💸 Pengeluaran (Uang Keluar)</option>
-                <option value="Pemasukan">💰 Pemasukan (Uang Masuk)</option>
-            `;
-
-            headerRow.innerHTML = `
-                <th class="p-3">Tanggal</th>
-                <th class="p-3">Toko/Tempat</th>
-                <th class="p-3">Detail/Keterangan</th>
-                <th class="p-3">Alasan Keperluan</th>
-                <th class="p-3">Kategori</th>
-                <th class="p-3">Jenis</th>
-                <th class="p-3 text-right">Jumlah</th>
-                <th class="p-3 text-center">Aksi</th>
-            `;
-
-            // Proteksi parseFloat untuk menghindari penumpukan NaN
-            let totalPemasukan = dbKeuangan.filter(x => x.jenis === 'Pemasukan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
-            let totalPengeluaran = dbKeuangan.filter(x => x.jenis === 'Pengeluaran').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
-            let saldoAkhir = totalPemasukan - totalPengeluaran;
-
-            summary.innerHTML = `
-                <div class="bg-emerald-50/90 p-4 rounded-xl border border-emerald-200 shadow-sm">
-                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Total Pemasukan</p>
-                    <p class="text-2xl font-black text-emerald-700">${formatRupiah(totalPemasukan)}</p>
-                </div>
-                <div class="bg-rose-50/90 p-4 rounded-xl border border-rose-200 shadow-sm">
-                    <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Total Pengeluaran</p>
-                    <p class="text-2xl font-black text-rose-700">${formatRupiah(totalPengeluaran)}</p>
-                </div>
-                <div class="bg-amber-50/90 p-4 rounded-xl border border-amber-200 shadow-sm">
-                    <p class="text-xs font-bold text-amber-700 uppercase tracking-wider">Saldo Dompet Akhir</p>
-                    <p class="text-2xl font-black text-slate-800">${formatRupiah(saldoAkhir)}</p>
-                </div>
-            `;
-
-            dbKeuangan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-            if (dbKeuangan.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Belum ada transaksi tercatat.</td></tr>`;
-            } else {
-                dbKeuangan.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50/80 border-b border-slate-100 transition";
-                    tr.innerHTML = `
-                        <td class="p-3 whitespace-nowrap">${item.tanggal}</td>
-                        <td class="p-3 font-semibold text-slate-800">${item.namaToko || '-'}</td>
-                        <td class="p-3">${item.keterangan || '-'}</td>
-                        <td class="p-3 max-w-[150px] truncate" title="${item.alasan || '-'}">${item.alasan || '<span class="text-slate-300">-</span>'}</td>
-                        <td class="p-3"><span class="px-2 py-0.5 text-xs bg-slate-200 text-slate-700 rounded-full font-medium">${item.kategori || 'Umum'}</span></td>
-                        <td class="p-3 font-bold ${item.jenis === 'Pemasukan' ? 'text-emerald-600' : 'text-rose-600'}">${item.jenis}</td>
-                        <td class="p-3 text-right font-bold text-slate-800">${formatRupiah(item.jumlah)}</td>
-                        <td class="p-3 text-center space-x-1 whitespace-nowrap">
-                            <button onclick="siapkanEdit('${item.id}')" class="text-blue-600 hover:text-blue-800 font-bold px-1.5 py-1 cursor-pointer">Edit</button>
-                            <button onclick="mintaHapus('${item.id}')" class="text-rose-600 hover:text-rose-800 font-bold px-1.5 py-1 cursor-pointer">Hapus</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-        } else {
-            document.getElementById('jenis').innerHTML = `
-                <option value="Simpanan">📥 Masukkan ke Tabungan (+)</option>
-                <option value="Penarikan">📤 Ambil dari Tabungan (-)</option>
-            `;
-
-            headerRow.innerHTML = `
-                <th class="p-3">Tanggal</th>
-                <th class="p-3">Nama Celengan/Wadah</th>
-                <th class="p-3">Target / Goal</th>
-                <th class="p-3">Alasan Detail</th>
-                <th class="p-3">Jenis Aliran</th>
-                <th class="p-3 text-right">Jumlah</th>
-                <th class="p-3 text-center">Aksi</th>
-            `;
-
-            let totalSimpanan = dbTabungan.filter(x => x.jenis === 'Simpanan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
-            let totalPenarikan = dbTabungan.filter(x => x.jenis === 'Penarikan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
-            let totalCelengan = totalSimpanan - totalPenarikan;
-
-            summary.innerHTML = `
-                <div class="bg-amber-100/80 p-4 rounded-xl border border-amber-300 shadow-sm md:col-span-3 text-center">
-                    <p class="text-xs font-bold text-amber-800 uppercase tracking-wider">Total Seluruh Celengan Tabungan Berjalan</p>
-                    <p class="text-3xl font-black text-amber-900">${formatRupiah(totalCelengan)}</p>
-                </div>
-            `;
-
-            dbTabungan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-            if (dbTabungan.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Belum ada target simpanan celengan.</td></tr>`;
-            } else {
-                dbTabungan.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50/80 border-b border-slate-100 transition";
-                    tr.innerHTML = `
-                        <td class="p-3 whitespace-nowrap">${item.tanggal}</td>
-                        <td class="p-3 font-semibold text-slate-800">${item.namaToko || '-'}</td>
-                        <td class="p-3">${item.keterangan || '-'}</td>
-                        <td class="p-3 max-w-[150px] truncate" title="${item.alasan || '-'}">${item.alasan || '<span class="text-slate-300">-</span>'}</td>
-                        <td class="p-3 font-bold ${item.jenis === 'Simpanan' ? 'text-amber-600' : 'text-slate-500'}">${item.jenis === 'Simpanan' ? '📥 Simpan' : '📤 Ambil'}</td>
-                        <td class="p-3 text-right font-bold text-slate-800">${formatRupiah(item.jumlah)}</td>
-                        <td class="p-3 text-center space-x-1 whitespace-nowrap">
-                            <button onclick="siapkanEdit('${item.id}')" class="text-blue-600 hover:text-blue-800 font-bold px-1.5 py-1 cursor-pointer">Edit</button>
-                            <button onclick="mintaHapus('${item.id}')" class="text-rose-600 hover:text-rose-800 font-bold px-1.5 py-1 cursor-pointer">Hapus</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-        }
-    }
-
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const id = document.getElementById('dataId').value;
-        const tanggal = document.getElementById('tanggal').value;
-        const namaToko = document.getElementById('namaToko').value;
-        const keterangan = document.getElementById('keterangan').value;
-        const alasan = document.getElementById('alasan').value;
-        const kategori = document.getElementById('kategori').value;
-        const jenis = document.getElementById('jenis').value;
-        
-        const elemenMataUang = document.getElementById('mataUang');
-        const jenisMataUang = elemenMataUang ? elemenMataUang.value : 'IDR';
-        
-        let jumlahInput = parseFloat(document.getElementById('jumlah').value) || 0;
-        let jumlah = jumlahInput;
-
-        // Logika konversi mata uang otomatis yang aman
-        if (jenisMataUang === 'USD') {
-            jumlah = Math.round(jumlahInput * KURS_USD_TO_IDR);
-        } else if (jenisMataUang === 'CENT') {
-            jumlah = Math.round(jumlahInput * KURS_CENT_TO_IDR);
-        }
-
-        // Validasi ekstra agar jumlah tidak minus atau bernilai 0
-        if (jumlah <= 0) {
-            showModal({
-                title: "Input Tidak Valid",
-                message: "Jumlah nominal uang yang dimasukkan harus lebih besar dari 0!",
-                type: "warning",
-                showCancel: false
-            });
-            return;
-        }
-
-        if (id) {
-            // Submit Edit Update Data
-            if (currentMode === 'keuangan') {
-                dbKeuangan = dbKeuangan.map(x => x.id === id ? { id, tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah } : x);
-                localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
-            } else {
-                // Di mode tabungan, properti kategori sengaja dihilangkan agar skema databasenya bersih
-                dbTabungan = dbTabungan.map(x => x.id === id ? { id, tanggal, namaToko, keterangan, alasan, jenis, jumlah } : x);
-                localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
-            }
-            
-            showModal({
-                title: "Berhasil Diubah",
-                message: "Transaksi kamu berhasil diperbarui di memori browser!",
-                type: "success",
-                showCancel: false
-            });
-        } else {
-            // Submit New Data Insert dengan memisahkan payload berdasarkan skema mode aktif
-            if (currentMode === 'keuangan') {
-                const dataBaruKeuangan = { id: Date.now().toString(), tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah };
-                dbKeuangan.push(dataBaruKeuangan);
-                localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
-            } else {
-                const dataBaruTabungan = { id: Date.now().toString(), tanggal, namaToko, keterangan, alasan, jenis, jumlah };
-                dbTabungan.push(dataBaruTabungan);
-                localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
-            }
-        }
-
-        playSuccessSound();
-        resetForm();
-        renderView();
-    });
-
-    function siapkanEdit(id) {
-        let database = currentMode === 'keuangan' ? dbKeuangan : dbTabungan;
-        const target = database.find(x => x.id === id);
-        if (!target) return;
-
-        showModal({
-            title: "Masuk Mode Edit?",
-            message: `Kamu akan mengubah data terkait "${target.keterangan || target.namaToko}". Formulir kiri siap disesuaikan.`,
-            type: "info",
-            confirmText: "Siapkan Edit",
-            onConfirm: () => {
-                document.getElementById('dataId').value = target.id;
-                document.getElementById('tanggal').value = target.tanggal;
-                document.getElementById('namaToko').value = target.namaToko || '';
-                document.getElementById('keterangan').value = target.keterangan || '';
-                document.getElementById('alasan').value = target.alasan || '';
-                document.getElementById('jenis').value = target.jenis;
-                document.getElementById('jumlah').value = target.jumlah; 
+            <!-- KIRI: FORMULIR INPUT -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1">
+                <h2 id="formTitle" class="text-lg font-black mb-4 text-slate-900 border-b border-slate-100 pb-2">📝 Tambah Catatan</h2>
                 
-                if (currentMode === 'keuangan') {
-                    document.getElementById('kategori').value = target.kategori || 'Umum';
+                <form id="mainForm" class="space-y-4">
+                    <!-- ID Tersembunyi untuk Keperluan Edit Data -->
+                    <input type="hidden" id="dataId">
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Tanggal</label>
+                        <input type="date" id="tanggal" required class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl focus:outline-amber-400 font-medium">
+                    </div>
+
+                    <div>
+                        <label id="labelToko" class="block text-xs font-bold text-slate-600 uppercase mb-1">Nama Toko / Instansi Sumber</label>
+                        <input type="text" id="namaToko" required placeholder="Contoh: Indomaret, Gaji Bulanan" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl focus:outline-amber-400">
+                    </div>
+
+                    <div>
+                        <label id="labelDetail" class="block text-xs font-bold text-slate-600 uppercase mb-1">Detail Barang / Keterangan</label>
+                        <input type="text" id="keterangan" required placeholder="Contoh: Beli sabun, Uang lemburan" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl focus:outline-amber-400">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Alasan Keperluan / Detail Penting</label>
+                        <textarea id="alasan" rows="2" placeholder="Catatan opsional..." class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl focus:outline-amber-400 text-sm"></textarea>
+                    </div>
+
+                    <div id="kategoriContainer">
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Kategori</label>
+                        <select id="kategori" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl focus:outline-amber-400">
+                            <option value="Makanan">🍔 Makanan & Minuman</option>
+                            <option value="Kebutuhan">🏠 Kebutuhan Rumah</option>
+                            <option value="Transportasi">🏍️ Transportasi / Bensin</option>
+                            <option value="Hiburan">🎮 Game / Hiburan</option>
+                            <option value="Pendapatan">💼 Gaji / Hasil Usaha</option>
+                            <option value="Umum">📦 Lain-lain / Umum</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Jenis Aliran Dana</label>
+                        <select id="jenis" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl focus:outline-amber-400 font-semibold text-slate-700">
+                            <!-- Opsi disuntik otomatis oleh JS berdasarkan Mode Aktif -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nominal Input Uang</label>
+                        <div class="flex gap-2">
+                            <select id="mataUang" class="bg-slate-100 border border-slate-200 p-2.5 rounded-xl font-bold text-sm focus:outline-none focus:ring-1 focus:ring-amber-400">
+                                <option value="IDR">IDR (Rp)</option>
+                                <option value="USD">USD ($)</option>
+                                <option value="CENT">CENT (¢)</option>
+                            </select>
+                            <input type="number" id="jumlah" required min="1" placeholder="0" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl font-bold text-slate-900 focus:outline-amber-400">
+                        </div>
+                    </div>
+
+                    <div class="pt-2 space-y-2">
+                        <button type="submit" id="submitBtn" class="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black p-3 rounded-xl transition shadow-sm cursor-pointer text-sm uppercase tracking-wide">
+                            Simpan Transaksi
+                        </button>
+                        <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold p-2.5 rounded-xl transition cursor-pointer text-xs">
+                            Batal / Keluar Mode Edit
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- KANAN: TABEL HISTORI DATA -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2 overflow-hidden">
+                <h2 id="tableTitle" class="text-lg font-black mb-4 text-slate-900 border-b border-slate-100 pb-2">📈 Histori Transaksi Bulan Ini</h2>
+                
+                <div class="overflow-x-auto w-full rounded-xl border border-slate-100">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr id="tableHeaderRow" class="bg-slate-50 text-slate-500 text-xs font-bold uppercase border-b border-slate-200">
+                                <!-- Kolom header disuntik dinamis oleh JS -->
+                            </tr>
+                        </thead>
+                        <tbody id="tabelBody" class="divide-y divide-slate-100 text-slate-700 text-sm">
+                            <!-- Baris data transaksi disuntik otomatis di sini -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CENTRAL MODAL DIALOG POPUP SYSTEM -->
+    <div id="customModal" class="opacity-0 pointer-events-none fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 z-50">
+        <div id="modalBox" class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl border border-slate-100 transform scale-95 transition-all duration-300">
+            <div id="modalIcon" class="text-3xl mb-2"></div>
+            <h3 id="modalTitle" class="text-base font-black text-slate-900 mb-1"></h3>
+            <p id="modalMessage" class="text-slate-500 text-xs mb-6 px-2 leading-relaxed"></p>
+            <div id="modalActionButtons" class="flex flex-col sm:flex-row-reverse gap-2">
+                <!-- Tombol aksi dinamis -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT PROTEKSI TOTAL (ANTI-BUG PUTIH) -->
+    <script>
+        let currentMode = 'keuangan';
+        let dbKeuangan = [];
+        let dbTabungan = [];
+        let pendingDeleteId = null;
+
+        const form = document.getElementById('mainForm');
+        const KURS_USD_TO_IDR = 17994.40;
+        const KURS_CENT_TO_IDR = 179.944;
+
+        // Ambil data localStorage dengan try-catch agar jika corrupt, app tidak hang/putih
+        try {
+            dbKeuangan = JSON.parse(localStorage.getItem('jurnalKeuangan')) || [];
+            dbTabungan = JSON.parse(localStorage.getItem('jurnalTabungan')) || [];
+        } catch (e) {
+            console.error("Deteksi data usang rusak. Sistem otomatis melakukan reset storage.");
+            dbKeuangan = [];
+            dbTabungan = [];
+        }
+
+        function playSuccessSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+            } catch(e) {}
+        }
+
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(parseFloat(angka) || 0);
+        }
+
+        function showModal({ title, message, type, confirmText, onConfirm, showCancel = true }) {
+            const modal = document.getElementById('customModal');
+            const box = document.getElementById('modalBox');
+            if (!modal || !box) {
+                // Fallback darurat jika elemen modal terhapus dari HTML
+                if (confirm(message)) { if(onConfirm) onConfirm(); }
+                return;
+            }
+
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            
+            const mIcon = document.getElementById('modalIcon');
+            if (mIcon) mIcon.innerHTML = type === 'danger' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+
+            const btnContainer = document.getElementById('modalActionButtons');
+            if (btnContainer) {
+                btnContainer.innerHTML = '';
+                
+                const cBtn = document.createElement('button');
+                cBtn.className = `w-full text-white px-4 py-2 rounded-xl font-bold text-xs cursor-pointer ${type === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-slate-800 hover:bg-slate-900'}`;
+                cBtn.innerText = confirmText || 'OK';
+                cBtn.onclick = () => { closeModal(); if (onConfirm) onConfirm(); };
+                btnContainer.appendChild(cBtn);
+
+                if (showCancel) {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = "w-full bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold text-xs cursor-pointer border border-slate-200";
+                    cancelBtn.innerText = 'Batal';
+                    cancelBtn.onclick = closeModal;
+                    btnContainer.appendChild(cancelBtn);
+                }
+            }
+
+            modal.classList.remove('pointer-events-none', 'opacity-0');
+            box.classList.remove('scale-95');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('customModal');
+            const box = document.getElementById('modalBox');
+            if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
+            if (box) box.classList.add('scale-95');
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            resetForm();
+
+            // Ambil elemen dengan proteksi optional chaining / check manual agar anti-error
+            const btnKeuangan = document.getElementById('tabKeuangan');
+            const btnTabungan = document.getElementById('tabTabungan');
+            const labelToko = document.getElementById('labelToko');
+            const labelDetail = document.getElementById('labelDetail');
+            const katContainer = document.getElementById('kategoriContainer');
+            const tTitle = document.getElementById('tableTitle');
+
+            if (mode === 'keuangan') {
+                if(btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
+                if(btnTabungan) btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
+                if(labelToko) labelToko.innerText = "Nama Toko / Instansi Sumber";
+                if(labelDetail) labelDetail.innerText = "Detail Barang / Keterangan";
+                if(katContainer) katContainer.classList.remove('hidden');
+                if(tTitle) tTitle.innerText = "📈 Histori Transaksi Bulan Ini";
+            } else {
+                if(btnTabungan) btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
+                if(btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
+                if(labelToko) labelToko.innerText = "Nama Akun Tabungan / Wadah";
+                if(labelDetail) labelDetail.innerText = "Tujuan / Goal Menabung";
+                if(katContainer) katContainer.classList.add('hidden');
+                if(tTitle) tTitle.innerText = "🐷 Histori Aliran Celengan Tabungan";
+            }
+            renderView();
+        }
+
+        function renderView() {
+            const summary = document.getElementById('summarySection');
+            const headerRow = document.getElementById('tableHeaderRow');
+            const tbody = document.getElementById('tabelBody');
+            const inputTanggal = document.getElementById('tanggal');
+            const selectJenis = document.getElementById('jenis');
+            
+            if (inputTanggal && !inputTanggal.value) {
+                inputTanggal.value = new Date().toISOString().split('T')[0];
+            }
+            
+            if (!tbody) return; // Pengunci utama anti layar putih mati total
+            tbody.innerHTML = '';
+
+            if (currentMode === 'keuangan') {
+                if (selectJenis) {
+                    selectJenis.innerHTML = `
+                        <option value="Pengeluaran">💸 Pengeluaran (Uang Keluar)</option>
+                        <option value="Pemasukan">💰 Pemasukan (Uang Masuk)</option>
+                    `;
+                }
+                if (headerRow) {
+                    headerRow.innerHTML = `
+                        <th class="p-3">Tanggal</th><th class="p-3">Toko/Tempat</th><th class="p-3">Detail</th>
+                        <th class="p-3">Alasan</th><th class="p-3">Kategori</th><th class="p-3">Jenis</th>
+                        <th class="p-3 text-right">Jumlah</th><th class="p-3 text-center">Aksi</th>
+                    `;
                 }
 
-                // Reset pilihan mata uang ke IDR saat mode edit agar tidak memicu double-conversion tidak sengaja
-                const elemenMataUang = document.getElementById('mataUang');
-                if (elemenMataUang) elemenMataUang.value = 'IDR';
-
-                document.getElementById('formTitle').innerText = "🔄 Mode Edit Data";
-                document.getElementById('submitBtn').innerText = "Simpan Perubahan";
+                let totalPemasukan = dbKeuangan.filter(x => x.jenis === 'Pemasukan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
+                let totalPengeluaran = dbKeuangan.filter(x => x.jenis === 'Pengeluaran').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
                 
-                const cancelBtn = document.getElementById('cancelBtn');
-                if(cancelBtn) cancelBtn.classList.remove('hidden');
+                if (summary) {
+                    summary.innerHTML = `
+                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 shadow-sm">
+                            <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Total Pemasukan</p>
+                            <p class="text-xl font-black text-emerald-700">${formatRupiah(totalPemasukan)}</p>
+                        </div>
+                        <div class="bg-rose-50 p-4 rounded-xl border border-rose-200 shadow-sm">
+                            <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Total Pengeluaran</p>
+                            <p class="text-xl font-black text-rose-700">${formatRupiah(totalPengeluaran)}</p>
+                        </div>
+                        <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 shadow-sm">
+                            <p class="text-xs font-bold text-amber-700 uppercase tracking-wider">Saldo Dompet Akhir</p>
+                            <p class="text-xl font-black text-slate-800">${formatRupiah(totalPemasukan - totalPengeluaran)}</p>
+                        </div>
+                    `;
+                }
+
+                dbKeuangan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+                if (dbKeuangan.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Belum ada histori transaksi keuangan.</td></tr>`;
+                } else {
+                    dbKeuangan.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 border-b border-slate-100 transition text-xs md:text-sm";
+                        tr.innerHTML = `
+                            <td class="p-3 whitespace-nowrap">${item.tanggal || '-'}</td>
+                            <td class="p-3 font-semibold text-slate-800">${item.namaToko || '-'}</td>
+                            <td class="p-3">${item.keterangan || '-'}</td>
+                            <td class="p-3 text-slate-500 max-w-[120px] truncate" title="${item.alasan || ''}">${item.alasan || '-'}</td>
+                            <td class="p-3"><span class="px-2 py-0.5 text-xs bg-slate-100 text-slate-600 rounded-full font-medium">${item.kategori || 'Umum'}</span></td>
+                            <td class="p-3 font-bold ${item.jenis === 'Pemasukan' ? 'text-emerald-600' : 'text-rose-600'}">${item.jenis}</td>
+                            <td class="p-3 text-right font-bold text-slate-800">${formatRupiah(item.jumlah)}</td>
+                            <td class="p-3 text-center space-x-2 whitespace-nowrap font-bold">
+                                <button onclick="siapkanEdit('${item.id}')" class="text-blue-600 hover:text-blue-800 cursor-pointer">Edit</button>
+                                <button onclick="mintaHapus('${item.id}')" class="text-rose-600 hover:text-rose-800 cursor-pointer">Hapus</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } else {
+                if (selectJenis) {
+                    selectJenis.innerHTML = `
+                        <option value="Simpanan">📥 Masukkan ke Tabungan (+)</option>
+                        <option value="Penarikan">📤 Ambil dari Tabungan (-)</option>
+                    `;
+                }
+                if (headerRow) {
+                    headerRow.innerHTML = `
+                        <th class="p-3">Tanggal</th><th class="p-3">Nama Celengan/Wadah</th><th class="p-3">Target Target</th>
+                        <th class="p-3">Alasan Detail</th><th class="p-3">Jenis Aliran</th>
+                        <th class="p-3 text-right">Jumlah</th><th class="p-3 text-center">Aksi</th>
+                    `;
+                }
+
+                let totalSimpanan = dbTabungan.filter(x => x.jenis === 'Simpanan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
+                let totalPenarikan = dbTabungan.filter(x => x.jenis === 'Penarikan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
+                
+                if (summary) {
+                    summary.innerHTML = `
+                        <div class="bg-amber-50 p-4 rounded-xl border border-amber-300 text-center col-span-full shadow-sm">
+                            <p class="text-xs font-bold text-amber-800 uppercase tracking-wider">Total Isi Celengan Tabungan Berjalan</p>
+                            <p class="text-2xl font-black text-amber-950">${formatRupiah(totalSimpanan - totalPenarikan)}</p>
+                        </div>
+                    `;
+                }
+
+                dbTabungan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+                if (dbTabungan.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Belum ada target simpanan celengan.</td></tr>`;
+                } else {
+                    dbTabungan.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 border-b border-slate-100 transition text-xs md:text-sm";
+                        tr.innerHTML = `
+                            <td class="p-3 whitespace-nowrap">${item.tanggal || '-'}</td>
+                            <td class="p-3 font-semibold text-slate-800">${item.namaToko || '-'}</td>
+                            <td class="p-3">${item.keterangan || '-'}</td>
+                            <td class="p-3 text-slate-500 max-w-[120px] truncate" title="${item.alasan || ''}">${item.alasan || '-'}</td>
+                            <td class="p-3 font-bold ${item.jenis === 'Simpanan' ? 'text-amber-600' : 'text-slate-500'}">${item.jenis === 'Simpanan' ? '📥 Simpan' : '📤 Ambil'}</td>
+                            <td class="p-3 text-right font-bold text-slate-800">${formatRupiah(item.jumlah)}</td>
+                            <td class="p-3 text-center space-x-2 whitespace-nowrap font-bold">
+                                <button onclick="siapkanEdit('${item.id}')" class="text-blue-600 hover:text-blue-800 cursor-pointer">Edit</button>
+                                <button onclick="mintaHapus('${item.id}')" class="text-rose-600 hover:text-rose-800 cursor-pointer">Hapus</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
             }
-        });
-    }
-
-    function resetForm() {
-        if(form) form.reset();
-        document.getElementById('dataId').value = '';
-        document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
-        document.getElementById('formTitle').innerText = "📝 Tambah Catatan";
-        document.getElementById('submitBtn').innerText = currentMode === 'keuangan' ? "Simpan Transaksi" : "Simpan Tabungan";
-        
-        const cancelBtn = document.getElementById('cancelBtn');
-        if(cancelBtn) cancelBtn.classList.add('hidden');
-        
-        const elemenMataUang = document.getElementById('mataUang');
-        if (elemenMataUang) elemenMataUang.value = 'IDR';
-    }
-
-    function mintaHapus(id) {
-        pendingDeleteId = id;
-        let database = currentMode === 'keuangan' ? dbKeuangan : dbTabungan;
-        const target = database.find(x => x.id === id);
-        if (!target) return;
-        
-        showModal({
-            title: "Hapus Catatan Ini?",
-            message: `Tindakan ini permanen. Catatan "${target.keterangan || target.namaToko}" seharga ${formatRupiah(target.jumlah)} akan terhapus total dari browser.`,
-            type: "danger",
-            confirmText: "Ya, Hapus Data",
-            onConfirm: eksekusiHapus
-        });
-    }
-
-    function eksekusiHapus() {
-        if (!pendingDeleteId) return;
-        
-        if (currentMode === 'keuangan') {
-            dbKeuangan = dbKeuangan.filter(x => x.id !== pendingDeleteId);
-            localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
-        } else {
-            dbTabungan = dbTabungan.filter(x => x.id !== pendingDeleteId);
-            localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
         }
 
-        if (document.getElementById('dataId').value === pendingDeleteId) resetForm();
-        pendingDeleteId = null;
-        
-        renderView();
-    }
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const id = document.getElementById('dataId')?.value;
+                const tanggal = document.getElementById('tanggal')?.value;
+                const namaToko = document.getElementById('namaToko')?.value;
+                const keterangan = document.getElementById('keterangan')?.value;
+                const alasan = document.getElementById('alasan')?.value;
+                const kategori = document.getElementById('kategori')?.value || 'Umum';
+                const jenis = document.getElementById('jenis')?.value;
+                const mataUang = document.getElementById('mataUang')?.value || 'IDR';
+                
+                let jumlahInput = parseFloat(document.getElementById('jumlah')?.value) || 0;
+                let jumlah = jumlahInput;
 
-    // Jalankan inisialisasi awal saat dokumen siap
-    document.addEventListener("DOMContentLoaded", function() {
-        renderView();
-    });
-</script>
+                if (mataUang === 'USD') jumlah = Math.round(jumlahInput * KURS_USD_TO_IDR);
+                if (mataUang === 'CENT') jumlah = Math.round(jumlahInput * KURS_CENT_TO_IDR);
+
+                if (jumlah <= 0) {
+                    showModal({ title: "Gagal", message: "Nominal uang harus diisi lebih dari 0!", type: "warning", showCancel: false });
+                    return;
+                }
+
+                if (id) {
+                    if (currentMode === 'keuangan') {
+                        dbKeuangan = dbKeuangan.map(x => x.id === id ? { id, tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah } : x);
+                        localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
+                    } else {
+                        dbTabungan = dbTabungan.map(x => x.id === id ? { id, tanggal, namaToko, keterangan, alasan, jenis, jumlah } : x);
+                        localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
+                    }
+                    showModal({ title: "Sukses", message: "Catatan berhasil diperbarui!", type: "success", showCancel: false });
+                } else {
+                    if (currentMode === 'keuangan') {
+                        dbKeuangan.push({ id: Date.now().toString(), tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah });
+                        localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
+                    } else {
+                        dbTabungan.push({ id: Date.now().toString(), tanggal, namaToko, keterangan, alasan, jenis, jumlah });
+                        localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
+                    }
+                }
+
+                playSuccessSound();
+                resetForm();
+                renderView();
+            });
+        }
+
+        function siapkanEdit(id) {
+            let database = currentMode === 'keuangan' ? dbKeuangan : dbTabungan;
+            const target = database.find(x => x.id === id);
+            if (!target) return;
+
+            showModal({
+                title: "Masuk Mode Ubah?",
+                message: `Formulir kiri otomatis memuat data "${target.keterangan || target.namaToko}" untuk siap diedit.`,
+                type: "info",
+                confirmText: "Siapkan Form",
+                onConfirm: () => {
+                    if(document.getElementById('dataId')) document.getElementById('dataId').value = target.id;
+                    if(document.getElementById('tanggal')) document.getElementById('tanggal').value = target.tanggal;
+                    if(document.getElementById('namaToko')) document.getElementById('namaToko').value = target.namaToko || '';
+                    if(document.getElementById('keterangan')) document.getElementById('keterangan').value = target.keterangan || '';
+                    if(document.getElementById('alasan')) document.getElementById('alasan').value = target.alasan || '';
+                    if(document.getElementById('jenis')) document.getElementById('jenis').value = target.jenis;
+                    if(document.getElementById('jumlah')) document.getElementById('jumlah').value = target.jumlah;
+                    
+                    if (currentMode === 'keuangan' && document.getElementById('kategori')) {
+                        document.getElementById('kategori').value = target.kategori || 'Umum';
+                    }
+
+                    if(document.getElementById('mataUang')) document.getElementById('mataUang').value = 'IDR';
+                    if(document.getElementById('formTitle')) document.getElementById('formTitle').innerText = "🔄 Mode Edit Data";
+                    if(document.getElementById('submitBtn')) document.getElementById('submitBtn').innerText = "Simpan Perubahan";
+                    if(document.getElementById('cancelBtn')) document.getElementById('cancelBtn').classList.remove('hidden');
+                }
+            });
+        }
+
+        function resetForm() {
+            if (form) form.reset();
+            if(document.getElementById('dataId')) document.getElementById('dataId').value = '';
+            if(document.getElementById('tanggal')) document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+            if(document.getElementById('formTitle')) document.getElementById('formTitle').innerText = "📝 Tambah Catatan";
+            if(document.getElementById('submitBtn')) document.getElementById('submitBtn').innerText = currentMode === 'keuangan' ? "Simpan Transaksi" : "Simpan Tabungan";
+            if(document.getElementById('cancelBtn')) document.getElementById('cancelBtn').classList.add('hidden');
+            if(document.getElementById('mataUang')) document.getElementById('mataUang').value = 'IDR';
+        }
+
+        function mintaHapus(id) {
+            pendingDeleteId = id;
+            let database = currentMode === 'keuangan' ? dbKeuangan : dbTabungan;
+            const target = database.find(x => x.id === id);
+            if (!target) return;
+
+            showModal({
+                title: "Hapus Data?",
+                message: `Data "${target.keterangan || target.namaToko}" senilai ${formatRupiah(target.jumlah)} akan dihapus permanen.`,
+                type: "danger",
+                confirmText: "Ya, Hapus",
+                onConfirm: eksekusiHapus
+            });
+        }
+
+        function eksekusiHapus() {
+            if (!pendingDeleteId) return;
+            if (currentMode === 'keuangan') {
+                dbKeuangan = dbKeuangan.filter(x => x.id !== pendingDeleteId);
+                localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
+            } else {
+                dbTabungan = dbTabungan.filter(x => x.id !== pendingDeleteId);
+                localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
+            }
+            if (document.getElementById('dataId')?.value === pendingDeleteId) resetForm();
+            pendingDeleteId = null;
+            renderView();
+        }
+
+        // Pemicu rendering pertama kali setelah dokumen web siap dimuat
+        document.addEventListener("DOMContentLoaded", function() {
+            renderView();
+        });
+    </script>
+</body>
+</html>
