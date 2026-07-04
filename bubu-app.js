@@ -451,7 +451,9 @@ function siapkanEdit(id) {
             document.getElementById('mataUang').value = 'IDR';
             document.getElementById('formTitle').innerText = "🔄 Mode Edit Data";
             document.getElementById('submitBtn').innerText = "Simpan Perubahan ✨";
-            document.getElementById('cancelBtn').classList.remove('hidden');
+            
+            const cancelBtn = document.getElementById('cancelBtn');
+            if (cancelBtn) cancelBtn.classList.remove('hidden');
         }
     });
 }
@@ -462,8 +464,20 @@ function resetForm() {
     document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
     document.getElementById('formTitle').innerText = "📝 Tambah Catatan";
     document.getElementById('submitBtn').innerText = currentMode === 'keuangan' ? "Simpan Transaksi ✨" : "Simpan Tabungan ✨";
-    document.getElementById('cancelBtn').classList.add('hidden');
+    
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) cancelBtn.classList.add('hidden');
+    
     document.getElementById('mataUang').value = 'IDR';
+}
+
+// Handler khusus jika element tombol cancel diklik secara manual di UI HTML
+const cancelBtnHtml = document.getElementById('cancelBtn');
+if (cancelBtnHtml) {
+    cancelBtnHtml.addEventListener('click', function(e) {
+        e.preventDefault();
+        resetForm();
+    });
 }
 
 function mintaHapus(id) {
