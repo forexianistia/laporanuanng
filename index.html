@@ -4,55 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jurnal Laporan Keuangan Bulanan</title>
-    <!-- Tailwind CSS untuk Desain yang Rapi -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        /* Custom pastel blend background */
+        .bg-custom-blend {
+            background: linear-gradient(135deg, #fef9c3 0%, #e2e8f0 100%);
+        }
+        /* Modal Animation */
+        .modal-active {
+            transition: opacity 0.3s ease;
+            opacity: 1;
+            pointer-events: auto;
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+<body class="bg-custom-blend min-h-screen p-4 md:p-8 text-slate-700">
 
-    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-md p-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">📊 Jurnal Laporan Keuangan Bulanan</h1>
-
-        <!-- Grid Summary -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-                <p class="text-sm font-medium text-green-600">Total Pemasukan</p>
-                <p id="totalPemasukan" class="text-2xl font-bold text-green-700">Rp 0</p>
-            </div>
-            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-                <p class="text-sm font-medium text-red-600">Total Pengeluaran</p>
-                <p id="totalPengeluaran" class="text-2xl font-bold text-red-700">Rp 0</p>
-            </div>
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <p class="text-sm font-medium text-blue-600">Saldo Akhir</p>
-                <p id="saldoAkhir" class="text-2xl font-bold text-blue-700">Rp 0</p>
-            </div>
+    <div class="max-w-6xl mx-auto bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-amber-100">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-2">📊 Jurnal Keuangan & Tabungan</h1>
+            <p class="text-sm text-slate-500">Catat transaksi harian dan pantau target simpananmu</p>
         </div>
 
+        <!-- Mode Switcher (Tab) -->
+        <div class="flex justify-center space-x-2 p-1 bg-slate-200/80 rounded-xl max-w-md mx-auto mb-8">
+            <button id="tabKeuangan" onclick="switchMode('keuangan')" class="w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm">
+                💼 Jurnal Transaksi
+            </button>
+            <button id="tabTabungan" onclick="switchMode('tabungan')" class="w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900">
+                🐷 Mode Celengan / Nabung
+            </button>
+        </div>
+
+        <!-- Summary Cards (Dynamic Based on Mode) -->
+        <div id="summarySection" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <!-- Content Injected via JS -->
+        </div>
+
+        <!-- Main Grid Workspace -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Form Input / Edit -->
-            <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 h-fit">
-                <h2 id="formTitle" class="text-xl font-semibold text-gray-700 mb-4">📝 Tambah Transaksi</h2>
-                <form id="transaksiForm" class="space-y-4">
-                    <input type="hidden" id="transaksiId">
+            
+            <!-- LEFT PANEL: Dynamic Form -->
+            <div class="bg-slate-50/80 p-5 rounded-xl border border-slate-200 h-fit shadow-sm">
+                <h2 id="formTitle" class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">📝 Tambah Catatan</h2>
+                
+                <form id="mainForm" class="space-y-4">
+                    <input type="hidden" id="dataId">
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal</label>
-                        <input type="date" id="tanggal" required class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tanggal</label>
+                        <input type="date" id="tanggal" required class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition">
                     </div>
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Nama Toko / Tempat</label>
-                        <input type="text" id="namaToko" placeholder="Contoh: Indomaret, Shopee, Warung Bakso" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                        <label id="labelToko" class="block text-xs font-bold text-slate-500 uppercase mb-1">Nama Toko / Instansi</label>
+                        <input type="text" id="namaToko" placeholder="Contoh: Alfamart, Tokopedia, Gaji PT" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition">
                     </div>
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Detail Barang / Keterangan</label>
-                        <input type="text" id="keterangan" required placeholder="Contoh: Beli makan siang, Bayar kost" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                        <label id="labelDetail" class="block text-xs font-bold text-slate-500 uppercase mb-1">Detail Barang / Keterangan</label>
+                        <input type="text" id="keterangan" required placeholder="Contoh: Beli kemeja, Uang lemburan" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition">
                     </div>
+
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Kategori</label>
-                        <select id="kategori" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Alasan / Keperluan Spesifik</label>
+                        <textarea id="alasan" rows="2" placeholder="Contoh: Untuk kebutuhan kuliah, Hadiah ulang tahun, Dana darurat" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition resize-none"></textarea>
+                    </div>
+                    
+                    <div id="kategoriContainer">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Kategori</label>
+                        <select id="kategori" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none transition">
                             <option value="Makanan">Makanan</option>
                             <option value="Transportasi">Transportasi</option>
                             <option value="Kost/Listrik">Kost/Listrik</option>
@@ -61,43 +87,44 @@
                             <option value="Lain-lain">Lain-lain</option>
                         </select>
                     </div>
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Jenis Transaksi</label>
-                        <select id="jenis" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
-                            <option value="Pengeluaran">Pengeluaran</option>
-                            <option value="Pemasukan">Pemasukan</option>
+                        <label id="labelJenis" class="block text-xs font-bold text-slate-500 uppercase mb-1">Jenis Gerakan</label>
+                        <select id="jenis" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none transition">
+                            <!-- Options Dynamic based on Mode -->
                         </select>
                     </div>
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Jumlah (Rp)</label>
-                        <input type="number" id="jumlah" required min="0" placeholder="0" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Jumlah Uang (Rp)</label>
+                        <input type="number" id="jumlah" required min="1" placeholder="0" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition font-semibold text-slate-800">
                     </div>
 
                     <div class="pt-2 space-y-2">
-                        <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 font-medium transition cursor-pointer">Simpan Transaksi</button>
-                        <button type="button" id="cancelBtn" class="w-full bg-gray-300 text-gray-700 p-2 rounded-md hover:bg-gray-400 font-medium transition hidden cursor-pointer">Batal Edit</button>
+                        <button type="submit" id="submitBtn" class="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 p-2.5 rounded-lg font-bold shadow-md transition active:scale-[0.98] cursor-pointer">Simpan Transaksi</button>
+                        <button type="button" id="cancelBtn" onclick="resetForm()" class="w-full bg-slate-300 text-slate-700 p-2.5 rounded-lg font-bold hover:bg-slate-400 transition hidden cursor-pointer">Batal Edit</button>
                     </div>
                 </form>
             </div>
 
-            <!-- Tabel Histori Data -->
-            <div class="lg:col-span-2">
-                <h2 class="text-xl font-semibold text-gray-700 mb-4">📈 Histori Transaksi Bulan Ini</h2>
-                <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
-                    <table class="w-full text-left border-collapse bg-white">
-                        <thead class="bg-gray-100 text-gray-700 border-b border-gray-200 font-medium text-sm">
-                            <tr>
-                                <th class="p-3">Tanggal</th>
-                                <th class="p-3">Toko/Tempat</th>
-                                <th class="p-3">Detail/Keterangan</th>
-                                <th class="p-3">Kategori</th>
-                                <th class="p-3">Jenis</th>
-                                <th class="p-3 text-right">Jumlah</th>
-                                <th class="p-3 text-center">Aksi</th>
+            <!-- RIGHT PANEL: Table Display -->
+            <div class="lg:col-span-2 flex flex-col">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                    <h2 id="tableTitle" class="text-xl font-bold text-slate-800">📈 Histori Rekaman</h2>
+                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 px-4 rounded-lg flex items-center gap-1.5 shadow transition cursor-pointer">
+                        📥 Download / Cetak Laporan PDF
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
+                    <table class="w-full text-left border-collapse" id="printArea">
+                        <thead class="bg-slate-100 text-slate-700 border-b border-slate-200 font-bold text-xs uppercase tracking-wider">
+                            <tr id="tableHeaderRow">
+                                <!-- Headers Dynamic via JS -->
                             </tr>
                         </thead>
-                        <tbody id="tabelBody" class="divide-y divide-gray-100 text-sm text-gray-600">
-                            <!-- Data otomatis dirender di sini via JS -->
+                        <tbody id="tabelBody" class="divide-y divide-slate-100 text-sm text-slate-600">
+                            <!-- Injected rows via JS -->
                         </tbody>
                     </table>
                 </div>
@@ -105,130 +132,403 @@
         </div>
     </div>
 
-    <!-- LOGIKA JAVASCRIPT -->
-    <script>
-        let transaksiData = JSON.parse(localStorage.getItem('jurnalKeuangan')) || [];
-        const form = document.getElementById('transaksiForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const formTitle = document.getElementById('formTitle');
+    <!-- CENTRAL POPUP MODAL (CUSTOM ALERT/CONFIRM) -->
+    <div id="customModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 transform transition-all scale-95 duration-300" id="modalBox">
+            <div class="text-center">
+                <div id="modalIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4">
+                    <!-- Icon Injected via JS -->
+                </div>
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-900 mb-2">Konfirmasi</h3>
+                <p id="modalMessage" class="text-sm text-slate-500 mb-6">Apakah kamu yakin ingin memproses aksi ini?</p>
+                
+                <div class="flex space-x-2" id="modalActionButtons">
+                    <!-- Buttons Injected via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
 
-        // Mengeset tanggal hari ini secara default di input form
-        document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Storage data initialization
+        let currentMode = 'keuangan'; // 'keuangan' atau 'tabungan'
+        let dbKeuangan = JSON.parse(localStorage.getItem('jurnalKeuangan')) || [];
+        let dbTabungan = JSON.parse(localStorage.getItem('jurnalTabungan')) || [];
+        
+        const form = document.getElementById('mainForm');
+        let pendingDeleteId = null;
+
+        // Sound FX System using Web Audio API (No outside assets needed)
+        function playSuccessSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Sound Note 1
+                let osc1 = audioCtx.createOscillator();
+                let gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                gain1.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start();
+                osc1.stop(audioCtx.currentTime + 0.15);
+
+                // Sound Note 2 (chord harmony effect)
+                setTimeout(() => {
+                    let osc2 = audioCtx.createOscillator();
+                    let gain2 = audioCtx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+                    gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.start();
+                    osc2.stop(audioCtx.currentTime + 0.2);
+                }, 70);
+            } catch(e) { console.log("AudioContext not supported or blocked"); }
+        }
 
         function formatRupiah(angka) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         }
 
-        function updateSummaryAndTable() {
-            const tbody = document.getElementById('tabelBody');
-            tbody.innerHTML = '';
-            
-            let pem_total = 0;
-            let peng_total = 0;
+        // Custom Central Modal Handler
+        function showModal({ title, message, type, confirmText, onConfirm, showCancel = true }) {
+            const modal = document.getElementById('customModal');
+            const box = document.getElementById('modalBox');
+            const mTitle = document.getElementById('modalTitle');
+            const mMsg = document.getElementById('modalMessage');
+            const mIcon = document.getElementById('modalIcon');
+            const btnContainer = document.getElementById('modalActionButtons');
 
-            // Sort data berdasarkan tanggal terbaru
-            transaksiData.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+            mTitle.innerText = title;
+            mMsg.innerText = message;
+            btnContainer.innerHTML = '';
 
-            if (transaksiData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400 italic">Belum ada catatan transaksi.</td></tr>`;
+            // Design Variant configurations
+            if (type === 'danger') {
+                mIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 bg-red-100 text-red-600";
+                mIcon.innerHTML = `⚠️`;
+            } else if (type === 'success') {
+                mIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 bg-green-100 text-green-600";
+                mIcon.innerHTML = `✓`;
+            } else {
+                mIcon.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 bg-amber-100 text-amber-600";
+                mIcon.innerHTML = `ℹ️`;
             }
 
-            transaksiData.forEach(item => {
-                if (item.jenis === 'Pemasukan') pem_total += parseFloat(item.jumlah);
-                else peng_total += parseFloat(item.jumlah);
+            // Confirm Button
+            const cBtn = document.createElement('button');
+            cBtn.className = `w-full text-white p-2 rounded-xl font-bold transition cursor-pointer text-sm ${type === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-slate-800 hover:bg-slate-900'}`;
+            cBtn.innerText = confirmText || 'OK';
+            cBtn.onclick = () => {
+                closeModal();
+                if (onConfirm) onConfirm();
+            };
+            btnContainer.appendChild(cBtn);
 
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition";
-                tr.innerHTML = `
-                    <td class="p-3">${item.tanggal}</td>
-                    <td class="p-3 font-medium text-gray-800">${item.namaToko || '-'}</td>
-                    <td class="p-3">${item.keterangan}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 text-xs bg-gray-200 text-gray-700 rounded-full">${item.kategori}</span></td>
-                    <td class="p-3 font-semibold ${item.jenis === 'Pemasukan' ? 'text-green-600' : 'text-red-600'}">${item.jenis}</td>
-                    <td class="p-3 text-right font-medium">${formatRupiah(item.jumlah)}</td>
-                    <td class="p-3 text-center space-x-1 whitespace-nowrap">
-                        <button onclick="siapkanEdit('${item.id}')" class="text-blue-600 hover:text-blue-800 font-medium px-2 py-1 cursor-pointer">Edit</button>
-                        <button onclick="hapusData('${item.id}')" class="text-red-600 hover:text-red-800 font-medium px-2 py-1 cursor-pointer">Hapus</button>
-                    </td>
+            // Cancel Button
+            if (showCancel) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = "w-full bg-slate-200 text-slate-700 p-2 rounded-xl font-bold hover:bg-slate-300 transition cursor-pointer text-sm";
+                cancelBtn.innerText = 'Batal';
+                cancelBtn.onclick = closeModal;
+                btnContainer.appendChild(cancelBtn);
+            }
+
+            // Open Animation classes
+            modal.classList.remove('pointer-events-none', 'opacity-0');
+            modal.classList.add('opacity-1');
+            box.classList.remove('scale-95');
+            box.classList.add('scale-100');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('customModal');
+            const box = document.getElementById('modalBox');
+            modal.classList.add('pointer-events-none', 'opacity-0');
+            modal.classList.remove('opacity-1');
+            box.classList.add('scale-95');
+            box.classList.remove('scale-100');
+        }
+
+        // Mode Navigation Controller
+        function switchMode(mode) {
+            currentMode = mode;
+            const btnKeuangan = document.getElementById('tabKeuangan');
+            const btnTabungan = document.getElementById('tabTabungan');
+            
+            resetForm();
+
+            if (mode === 'keuangan') {
+                btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
+                btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
+                
+                // Form configuration labels for Keuangan
+                document.getElementById('labelToko').innerText = "Nama Toko / Instansi Sumber";
+                document.getElementById('labelDetail').innerText = "Detail Barang / Keterangan";
+                document.getElementById('kategoriContainer').classList.remove('hidden');
+                document.getElementById('tableTitle').innerText = "📈 Histori Transaksi Bulan Ini";
+            } else {
+                btnTabungan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer bg-amber-400 text-slate-900 shadow-sm";
+                btnKeuangan.className = "w-1/2 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer text-slate-600 hover:text-slate-900";
+                
+                // Form configuration labels for Tabungan Celengan
+                document.getElementById('labelToko').innerText = "Nama Akun Tabungan / Wadah";
+                document.getElementById('labelDetail').innerText = "Tujuan / Goal Menabung";
+                document.getElementById('kategoriContainer').classList.add('hidden');
+                document.getElementById('tableTitle').innerText = "🐷 Histori Aliran Celengan Tabungan";
+            }
+
+            renderView();
+        }
+
+        function renderView() {
+            const summary = document.getElementById('summarySection');
+            const headerRow = document.getElementById('tableHeaderRow');
+            const tbody = document.getElementById('tabelBody');
+            
+            // Set input date to today default
+            document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+            
+            tbody.innerHTML = '';
+
+            if (currentMode === 'keuangan') {
+                // UI Form Setup Select options
+                document.getElementById('jenis').innerHTML = `
+                    <option value="Pengeluaran">💸 Pengeluaran (Uang Keluar)</option>
+                    <option value="Pemasukan">💰 Pemasukan (Uang Masuk)</option>
                 `;
-                tbody.appendChild(tr);
-            });
 
-            document.getElementById('totalPemasukan').innerText = formatRupiah(pem_total);
-            document.getElementById('totalPengeluaran').innerText = formatRupiah(peng_total);
-            document.getElementById('saldoAkhir').innerText = formatRupiah(pem_total - peng_total);
+                // Header Column structure setup
+                headerRow.innerHTML = `
+                    <th class="p-3">Tanggal</th>
+                    <th class="p-3">Toko/Tempat</th>
+                    <th class="p-3">Detail/Keterangan</th>
+                    <th class="p-3">Alasan Keperluan</th>
+                    <th class="p-3">Kategori</th>
+                    <th class="p-3">Jenis</th>
+                    <th class="p-3 text-right">Jumlah</th>
+                    <th class="p-3 text-center">Aksi</th>
+                `;
 
-            localStorage.setItem('jurnalKeuangan', JSON.stringify(transaksiData));
+                // Calculation formulas
+                let totalPemasukan = dbKeuangan.filter(x => x.jenis === 'Pemasukan').reduce((acc, c) => acc + parseFloat(c.jumlah), 0);
+                let totalPengeluaran = dbKeuangan.filter(x => x.jenis === 'Pengeluaran').reduce((acc, c) => acc + parseFloat(c.jumlah), 0);
+                let saldoAkhir = totalPemasukan - totalPengeluaran;
+
+                summary.innerHTML = `
+                    <div class="bg-emerald-50/90 p-4 rounded-xl border border-emerald-200 shadow-xs">
+                        <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Total Pemasukan</p>
+                        <p class="text-2xl font-black text-emerald-700">${formatRupiah(totalPemasukan)}</p>
+                    </div>
+                    <div class="bg-rose-50/90 p-4 rounded-xl border border-rose-200 shadow-xs">
+                        <p class="text-xs font-bold text-rose-600 uppercase tracking-wider">Total Pengeluaran</p>
+                        <p class="text-2xl font-black text-rose-700">${formatRupiah(totalPengeluaran)}</p>
+                    </div>
+                    <div class="bg-amber-50/90 p-4 rounded-xl border border-amber-200 shadow-xs">
+                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wider">Saldo Dompet Akhir</p>
+                        <p class="text-2xl font-black text-slate-800">${formatRupiah(saldoAkhir)}</p>
+                    </div>
+                `;
+
+                // Data mapping render
+                dbKeuangan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+                if (dbKeuangan.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Belum ada transaksi tercatat.</td></tr>`;
+                } else {
+                    dbKeuangan.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50/80 border-b border-slate-100 transition";
+                        tr.innerHTML = `
+                            <td class="p-3 whitespace-nowrap">${item.tanggal}</td>
+                            <td class="p-3 font-semibold text-slate-800">${item.namaToko || '-'}</td>
+                            <td class="p-3">${item.keterangan}</td>
+                            <td class="p-3 max-w-[150px] truncate" title="${item.alasan || '-'}">${item.alasan || '<span class="text-slate-300">-</span>'}</td>
+                            <td class="p-3"><span class="px-2 py-0.5 text-xs bg-slate-200 text-slate-700 rounded-full font-medium">${item.kategori}</span></td>
+                            <td class="p-3 font-bold ${item.jenis === 'Pemasukan' ? 'text-emerald-600' : 'text-rose-600'}">${item.jenis}</td>
+                            <td class="p-3 text-right font-bold text-slate-800">${formatRupiah(item.jumlah)}</td>
+                            <td class="p-3 text-center space-x-1 whitespace-nowrap">
+                                <button onclick="siapkanEdit('${item.id}')" class="text-blue-600 hover:text-blue-800 font-bold px-1.5 py-1 cursor-pointer">Edit</button>
+                                <button onclick="mintaHapus('${item.id}')" class="text-rose-600 hover:text-rose-800 font-bold px-1.5 py-1 cursor-pointer">Hapus</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+            } else {
+                // UI Tabungan Layout Options setup
+                document.getElementById('jenis').innerHTML = `
+                    <option value="Simpanan">📥 Masukkan ke Tabungan (+)</option>
+                    <option value="Penarikan">📤 Ambil dari Tabungan (-)</option>
+                `;
+
+                headerRow.innerHTML = `
+                    <th class="p-3">Tanggal</th>
+                    <th class="p-3">Nama Celengan/Wadah</th>
+                    <th class="p-3">Target / Goal</th>
+                    <th class="p-3">Alasan Detail</th>
+                    <th class="p-3">Jenis Aliran</th>
+                    <th class="p-3 text-right">Jumlah</th>
+                    <th class="p-3 text-center">Aksi</th>
+                `;
+
+                let totalSimpanan = dbTabungan.filter(x => x.jenis === 'Simpanan').reduce((acc, c) => acc + parseFloat(c.jumlah), 0);
+                let totalPenarikan = dbTabungan.filter(x => x.jenis === 'Penarikan').reduce((acc, c) => acc + parseFloat(c.jumlah), 0);
+                let totalCelengan = totalSimpanan - totalPenarikan;
+
+                summary.innerHTML = `
+                    <div class="bg-amber-100/80 p-4 rounded-xl border border-amber-300 shadow-xs md:col-span-3 text-center">
+                        <p class="text-xs font-bold text-amber-800 uppercase tracking-wider">Total Seluruh Celengan Tabungan Berjalan</p>
+                        <p class="text-3xl font-black text-amber-900">${formatRupiah(totalCelengan)}</p>
+                    </div>
+                `;
+
+                dbTabungan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+                if (dbTabungan.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Belum ada target simpanan celengan.</td></tr>`;
+                } else {
+                    dbTabungan.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50/80 border-b border-slate-100 transition";
+                        tr.innerHTML = `
+                            <td class="p-3 whitespace-nowrap">${item.tanggal}</td>
+                            <td class="p-3 font-semibold text-slate-800">${item.namaToko || '-'}</td>
+                            <td class="p-3">${item.keterangan}</td>
+                            <td class="p-3 max-w-[150px] truncate" title="${item.alasan || '-'}">${item.alasan || '<span class="text-slate-300">-</span>'}</td>
+                            <td class="p-3 font-bold ${item.jenis === 'Simpanan' ? 'text-amber-600' : 'text-slate-500'}">${item.jenis === 'Simpanan' ? '📥 Simpan' : '📤 Ambil'}</td>
+                            <td class="p-3 text-right font-bold text-slate-800">${formatRupiah(item.jumlah)}</td>
+                            <td class="p-3 text-center space-x-1 whitespace-nowrap">
+                                <button onclick="siapkanEdit('${item.id}')" class="text-blue-600 hover:text-blue-800 font-bold px-1.5 py-1 cursor-pointer">Edit</button>
+                                <button onclick="mintaHapus('${item.id}')" class="text-rose-600 hover:text-rose-800 font-bold px-1.5 py-1 cursor-pointer">Hapus</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            }
         }
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const id = document.getElementById('transaksiId').value;
+            const id = document.getElementById('dataId').value;
             const tanggal = document.getElementById('tanggal').value;
             const namaToko = document.getElementById('namaToko').value;
             const keterangan = document.getElementById('keterangan').value;
+            const alasan = document.getElementById('alasan').value;
             const kategori = document.getElementById('kategori').value;
             const jenis = document.getElementById('jenis').value;
             const jumlah = document.getElementById('jumlah').value;
 
+            let database = currentMode === 'keuangan' ? dbKeuangan : dbTabungan;
+
             if (id) {
-                // Proses Edit/Update
-                transaksiData = transaksiData.map(item => item.id === id ? { id, tanggal, namaToko, keterangan, kategori, jenis, jumlah } : item);
-                resetForm();
+                // Submit Edit Update Data
+                if (currentMode === 'keuangan') {
+                    dbKeuangan = dbKeuangan.map(x => x.id === id ? { id, tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah } : x);
+                    localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
+                } else {
+                    dbTabungan = dbTabungan.map(x => x.id === id ? { id, tanggal, namaToko, keterangan, alasan, jenis, jumlah } : x);
+                    localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
+                }
+                
+                showModal({
+                    title: "Berhasil Diubah",
+                    message: "Transaksi kamu berhasil diperbarui di memori browser!",
+                    type: "success",
+                    showCancel: false
+                });
             } else {
-                // Proses Tambah Baru
-                const baru = {
+                // Submit New Data Insert
+                const dataBaru = {
                     id: Date.now().toString(),
-                    tanggal, namaToko, keterangan, kategori, jenis, jumlah
+                    tanggal, namaToko, keterangan, alasan, kategori, jenis, jumlah
                 };
-                transaksiData.push(baru);
-                form.reset();
-                document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+                database.push(dataBaru);
+                localStorage.setItem(currentMode === 'keuangan' ? 'jurnalKeuangan' : 'jurnalTabungan', JSON.stringify(database));
             }
 
-            updateSummaryAndTable();
+            playSuccessSound();
+            resetForm();
+            renderView();
         });
 
         function siapkanEdit(id) {
-            const target = transaksiData.find(item => item.id === id);
+            let database = currentMode === 'keuangan' ? dbKeuangan : dbTabungan;
+            const target = database.find(x => x.id === id);
             if (!target) return;
 
-            document.getElementById('transaksiId').value = target.id;
-            document.getElementById('tanggal').value = target.tanggal;
-            document.getElementById('namaToko').value = target.namaToko;
-            document.getElementById('keterangan').value = target.keterangan;
-            document.getElementById('kategori').value = target.kategori;
-            document.getElementById('jenis').value = target.jenis;
-            document.getElementById('jumlah').value = target.jumlah;
+            // Trigger Central Custom Modal instead of browser top alert box
+            showModal({
+                title: "Masuk Mode Edit?",
+                message: `Kamu akan mengubah data terkait "${target.keterangan || target.namaToko}". Formulir kiri siap disesuaikan.`,
+                type: "info",
+                confirmText: "Siapkan Edit",
+                onConfirm: () => {
+                    document.getElementById('dataId').value = target.id;
+                    document.getElementById('tanggal').value = target.tanggal;
+                    document.getElementById('namaToko').value = target.namaToko;
+                    document.getElementById('keterangan').value = target.keterangan;
+                    document.getElementById('alasan').value = target.alasan || '';
+                    document.getElementById('jenis').value = target.jenis;
+                    document.getElementById('jumlah').value = target.jumlah;
+                    if (currentMode === 'keuangan') document.getElementById('kategori').value = target.kategori;
 
-            formTitle.innerText = "🔄 Edit Transaksi";
-            submitBtn.innerText = "Perbarui Transaksi";
-            cancelBtn.classList.remove('hidden');
+                    document.getElementById('formTitle').innerText = "🔄 Mode Edit Data";
+                    document.getElementById('submitBtn').innerText = "Simpan Perubahan";
+                    document.getElementById('cancelBtn').classList.remove('hidden');
+                }
+            });
         }
-
-        cancelBtn.addEventListener('click', resetForm);
 
         function resetForm() {
             form.reset();
-            document.getElementById('transaksiId').value = '';
+            document.getElementById('dataId').value = '';
             document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
-            formTitle.innerText = "📝 Tambah Transaksi";
-            submitBtn.innerText = "Simpan Transaksi";
-            cancelBtn.classList.add('hidden');
+            document.getElementById('formTitle').innerText = "📝 Tambah Catatan";
+            document.getElementById('submitBtn').innerText = currentMode === 'keuangan' ? "Simpan Transaksi" : "Simpan Tabungan";
+            document.getElementById('cancelBtn').classList.add('hidden');
         }
 
-        function hapusData(id) {
-            if (confirm('Apakah kamu yakin ingin menghapus transaksi ini?')) {
-                transaksiData = transaksiData.filter(item => item.id !== id);
-                if (document.getElementById('transaksiId').value === id) resetForm();
-                updateSummaryAndTable();
+        function mintaHapus(id) {
+            pendingDeleteId = id;
+            let database = currentMode === 'keuangan' ? dbKeuangan : dbTabungan;
+            const target = database.find(x => x.id === id);
+            
+            showModal({
+                title: "Hapus Catatan Ini?",
+                message: `Tindakan ini permanen. Catatan "${target.keterangan}" seharga ${formatRupiah(target.jumlah)} akan terhapus total dari browser.`,
+                type: "danger",
+                confirmText: "Ya, Hapus Data",
+                onConfirm: eksekusiHapus
+            });
+        }
+
+        function eksekusiHapus() {
+            if (!pendingDeleteId) return;
+            
+            if (currentMode === 'keuangan') {
+                dbKeuangan = dbKeuangan.filter(x => x.id !== pendingDeleteId);
+                localStorage.setItem('jurnalKeuangan', JSON.stringify(dbKeuangan));
+            } else {
+                dbTabungan = dbTabungan.filter(x => x.id !== pendingDeleteId);
+                localStorage.setItem('jurnalTabungan', JSON.stringify(dbTabungan));
             }
+
+            if (document.getElementById('dataId').value === pendingDeleteId) resetForm();
+            pendingDeleteId = null;
+            
+            renderView();
         }
 
-        // Jalankan saat pertama kali halaman dibuka
-        updateSummaryAndTable();
+        // Initialize display app state
+        renderView();
     </script>
 </body>
 </html>
