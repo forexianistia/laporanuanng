@@ -111,7 +111,7 @@ function dapatkanAudioContext() {
 
 function mainkanSuaraKetik() {
     const menuSuara = document.getElementById('menuSuara');
-    if (!menuSuara) return; // SAFE-GUARD: Jika element suara tidak ada di HTML, abaikan
+    if (!menuSuara) return; 
     const modeSuara = menuSuara.value;
     if (modeSuara === 'OFF') return;
     
@@ -174,7 +174,7 @@ async function ambilKursTerbaru() {
             KURS_CENT_TO_IDR = data.rates.IDR / 100;
         }
     } catch (error) {}
-    renderView(); // Tetap jalankan render meskipun API gagal diambil
+    renderView();
 }
 
 try {
@@ -192,7 +192,6 @@ function showModal({ title, message, type, confirmText, onConfirm, showCancel = 
     const modal = document.getElementById('customModal');
     const box = document.getElementById('modalBox');
     if (!modal || !box) {
-        // Fallback jika modal kustom tidak ada di HTML, gunakan alert browser bawaan agar tidak eror
         if (type !== 'danger' && !showCancel) {
             alert(`${title}: ${message}`);
             if (onConfirm) onConfirm();
@@ -387,7 +386,6 @@ function renderView() {
             });
         }
     }
-    pasangEfekSuaraKetik();
 }
 
 if (form) {
@@ -530,11 +528,17 @@ function eksekusiHapus() {
     renderView();
 }
 
+// --- OPTIMASI EFREK SUARA KETIK (EVENT DELEGATION) ---
 function pasangEfekSuaraKetik() {
-    document.querySelectorAll('.input-efek-suara').forEach(element => {
-        element.removeEventListener('input', mainkanSuaraKetik);
-        element.addEventListener('input', mainkanSuaraKetik);
-    });
+    if (!form) return;
+    form.removeEventListener('input', tanganiSuaraInputForm);
+    form.addEventListener('input', tanganiSuaraInputForm);
+}
+
+function tanganiSuaraInputForm(e) {
+    if (e.target && e.target.classList.contains('input-efek-suara')) {
+        mainkanSuaraKetik();
+    }
 }
 
 // --- FITUR DOWNLOAD LAPORAN PDF ---
@@ -595,7 +599,7 @@ function downloadPDF() {
 
 document.addEventListener("DOMContentLoaded", function() {
     ambilKursTerbaru();
-    inisialisasiGifLatar();
+    inisialisASIgifLatar();
     pasangEfekSuaraKetik();
     
     const fontTersimpan = localStorage.getItem('fontAplikasiPilihan') || 'font-fredoka';
