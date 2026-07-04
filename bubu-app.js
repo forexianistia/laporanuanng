@@ -502,7 +502,7 @@ function pasangEfekSuaraKetik() {
     });
 }
 
-// --- FITUR DOWNLOAD LAPORAN PDF ---
+// --- FITUR DOWNLOAD LAPORAN PDF (VERSI PERBAIKAN & FALLBACK AMAN) ---
 function downloadPDF() {
     const elemenTabel = document.getElementById('tabelBody')?.parentElement;
     const judulLaporan = document.getElementById('tableTitle')?.innerText || 'Laporan Bubu Dudu';
@@ -528,7 +528,9 @@ function downloadPDF() {
     // Gandakan tabel data, buang kolom "Aksi" paling kanan
     const tabelKloning = elemenTabel.cloneNode(true);
     const semuaBaris = tabelKloning.querySelectorAll('tr');
-    semuasBaris.forEach(baris => {
+    
+    // PERBAIKAN: Mengganti variabel "semuasBaris" menjadi "semuaBaris" agar tidak crash
+    semuaBaris.forEach(baris => {
         if (baris.lastElementChild) {
             baris.removeChild(baris.lastElementChild);
         }
@@ -545,11 +547,21 @@ function downloadPDF() {
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // Eksekusi download file
+    // Eksekusi download file aman dengan fallback cerdas
     if (typeof html2pdf !== 'undefined') {
         html2pdf().set(opsiPdf).from(wrapperKloning).save();
     } else {
-        showModal({ title: "Error", message: "Library html2pdf belum terpasang dengan benar!", type: "danger", showCancel: false });
+        // Fallback: Jika CDN html2pdf gagal termuat di html, gunakan window.print() bawaan sistem
+        showModal({ 
+            title: "Mengalihkan Cetak", 
+            message: "Library PDF eksternal belum siap di halaman ini. Ingin mencetak menggunakan modul cetak browser? (Silakan pilih opsi 'Simpan sebagai PDF')", 
+            type: "info", 
+            confirmText: "Buka Cetak",
+            onConfirm: () => {
+                window.print();
+            },
+            showCancel: true 
+        });
     }
 }
 
