@@ -38,12 +38,12 @@ function inisialisasiGifLatar() {
         const posY = Math.random() * (window.innerHeight - 100);
         
         // Menentukan arah gerak acak (Delta X & Delta Y)
-        let dx = (Math.random() - 0.5) * 1.0;
-        let dy = (Math.random() - 0.5) * 1.0;
+        let dx = (Math.random() - 0.5) * 1.5;
+        let dy = (Math.random() - 0.5) * 1.5;
         
         // Menjaga agar tidak ada gambar yang diam di tempat (kecepatan minimum)
-        if (Math.abs(dx) < 0.3) dx = dx < 0 ? -0.4 : 0.4;
-        if (Math.abs(dy) < 0.3) dy = dy < 0 ? -0.4 : 0.4;
+        if (Math.abs(dx) < 0.4) dx = dx < 0 ? -0.5 : 0.5;
+        if (Math.abs(dy) < 0.4) dy = dy < 0 ? -0.5 : 0.5;
 
         img.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
         containerBg.appendChild(img);
@@ -100,7 +100,9 @@ function updatePosisiGif() {
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function mainkanSuaraKetik() {
-    const modeSuara = document.getElementById('menuSuara').value;
+    const menuSuara = document.getElementById('menuSuara');
+    if (!menuSuara) return;
+    const modeSuara = menuSuara.value;
     if (modeSuara === 'OFF') return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const sekarang = audioCtx.currentTime;
@@ -168,6 +170,7 @@ async function ambilKursTerbaru() {
     }
 }
 
+// Load database awal aman dari crash parse
 try {
     dbKeuangan = JSON.parse(localStorage.getItem('jurnalKeuangan')) || [];
     dbTabungan = JSON.parse(localStorage.getItem('jurnalTabungan')) || [];
@@ -182,6 +185,8 @@ function formatRupiah(angka) {
 function showModal({ title, message, type, confirmText, onConfirm, showCancel = true }) {
     const modal = document.getElementById('customModal');
     const box = document.getElementById('modalBox');
+    if (!modal || !box) return;
+
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('modalMessage').innerText = message;
     
@@ -227,19 +232,19 @@ function switchMode(mode) {
     const tTitle = document.getElementById('tableTitle');
 
     if (mode === 'keuangan') {
-        btnKeuangan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
-        btnTabungan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]";
-        labelToko.innerText = "🏪 Toko / Sumber Uang";
-        labelDetail.innerText = "🍭 Keterangan Barang";
-        katContainer.classList.remove('hidden');
-        tTitle.innerText = "📈 Histori Keuangan Bulanan";
+        if (btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
+        if (btnTabungan) btnTabungan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]";
+        if (labelToko) labelToko.innerText = "🏪 Toko / Sumber Uang";
+        if (labelDetail) labelDetail.innerText = "🍭 Keterangan Barang";
+        if (katContainer) katContainer.classList.remove('hidden');
+        if (tTitle) tTitle.innerText = "📈 Histori Keuangan Bulanan";
     } else {
-        btnTabungan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
-        btnKeuangan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]";
-        labelToko.innerText = "🐷 Nama Celengan / Wadah";
-        labelDetail.innerText = "🎯 Target / Goal Nabung";
-        katContainer.classList.add('hidden');
-        tTitle.innerText = "🐷 Catatan Tabungan Bubu Dudu";
+        if (btnTabungan) btnTabungan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
+        if (btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]";
+        if (labelToko) labelToko.innerText = "🐷 Nama Celengan / Wadah";
+        if (labelDetail) labelDetail.innerText = "🎯 Target / Goal Nabung";
+        if (katContainer) katContainer.classList.add('hidden');
+        if (tTitle) tTitle.innerText = "🐷 Catatan Tabungan Bubu Dudu";
     }
     renderView();
 }
@@ -365,6 +370,8 @@ function renderView() {
             });
         }
     }
+    // Re-attach audio effects to newly rendered view inputs if any
+    pasangEfekSuaraKetik();
 }
 
 if (form) {
@@ -382,6 +389,7 @@ if (form) {
         let jumlahInput = parseFloat(document.getElementById('jumlah')?.value) || 0;
         let jumlah = jumlahInput;
 
+        // Hitung konversi mata uang jika input baru, atau tetap pakai IDR murni jika dari mode edit IDR
         if (mataUang === 'USD') jumlah = Math.round(jumlahInput * KURS_USD_TO_IDR);
         if (mataUang === 'CENT') jumlah = Math.round(jumlahInput * KURS_CENT_TO_IDR);
 
@@ -487,7 +495,6 @@ function eksekusiHapus() {
     renderView();
 }
 
-// Hubungkan event listener suara ketik ke input yang ada secara otomatis
 function pasangEfekSuaraKetik() {
     document.querySelectorAll('.input-efek-suara').forEach(element => {
         element.removeEventListener('input', mainkanSuaraKetik); // Hindari penumpukan ganda
@@ -521,7 +528,7 @@ function downloadPDF() {
     // Gandakan tabel data, buang kolom "Aksi" paling kanan
     const tabelKloning = elemenTabel.cloneNode(true);
     const semuaBaris = tabelKloning.querySelectorAll('tr');
-    semuaBaris.forEach(baris => {
+    semuasBaris.forEach(baris => {
         if (baris.lastElementChild) {
             baris.removeChild(baris.lastElementChild);
         }
@@ -539,7 +546,11 @@ function downloadPDF() {
     };
 
     // Eksekusi download file
-    html2pdf().set(opsiPdf).from(wrapperKloning).save();
+    if (typeof html2pdf !== 'undefined') {
+        html2pdf().set(opsiPdf).from(wrapperKloning).save();
+    } else {
+        showModal({ title: "Error", message: "Library html2pdf belum terpasang dengan benar!", type: "danger", showCancel: false });
+    }
 }
 
 document.addEventListener("DOMContentLoaded", function() {
