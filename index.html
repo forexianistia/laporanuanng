@@ -78,7 +78,7 @@
                     </button>
                 </div>
 
-                <!-- Navigasi Mode Aplikasi (Disempurnakan) -->
+                <!-- Navigasi Mode Aplikasi -->
                 <div class="flex bg-[#FDF5E6] p-1.5 rounded-2xl w-full md:w-64 border-2 border-[#FFE4C4] shrink-0 data-html2pdf-ignore">
                     <button id="tabKeuangan" onclick="switchMode('keuangan')" class="w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm">📈 Harian</button>
                     <button id="tabTabungan" onclick="switchMode('tabungan')" class="w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]">🐷 Celengan</button>
@@ -158,7 +158,30 @@
 
                 <!-- BLOK HISTORI DATA / TABEL -->
                 <div class="bg-white/95 backdrop-blur-xs p-5 rounded-3xl shadow-md border-4 border-[#FFDAB9] lg:col-span-2 overflow-hidden">
-                    <h2 id="tableTitle" class="text-md font-cute text-[#D2691E] mb-4">📈 Histori Keuangan Bulanan</h2>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 data-html2pdf-ignore">
+                        <h2 id="tableTitle" class="text-md font-cute text-[#D2691E]">📈 Histori Keuangan Bulanan</h2>
+                        
+                        <!-- MENYUNTIKKAN MENU TRANSAKSI BULANAN (FILTER DATA) -->
+                        <div id="kategoriContainerBulan" class="flex items-center gap-1.5 bg-[#FFF5EE] px-3 py-1.5 rounded-2xl border border-[#FFDAB9]">
+                            <label for="filterBulan" class="text-[11px] font-bold text-[#CD853F] whitespace-nowrap">📅 Periode:</label>
+                            <select id="filterBulan" class="text-[11px] font-bold bg-white text-slate-700 border border-[#FFDAB9] rounded-xl p-1 outline-none cursor-pointer">
+                                <option value="SEMUA">📈 Semua (Total Akumulatif)</option>
+                                <option value="01">Januari</option>
+                                <option value="02">Februari</option>
+                                <option value="03">Maret</option>
+                                <option value="04">April</option>
+                                <option value="05">Mei</option>
+                                <option value="06">Juni</option>
+                                <option value="07">Juli</option>
+                                <option value="08">Agustus</option>
+                                <option value="09">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
