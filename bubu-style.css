@@ -5,6 +5,7 @@ body {
     font-family: 'Quicksand', sans-serif; 
     background-color: #FFF9E6 !important; /* Warna Kuning Pastel Utama */
     transition: font-family 0.3s ease;
+    color: #5C4033; /* Warna teks cokelat gelap hangat agar kontras dengan pastel */
 }
 
 .font-cute { 
@@ -57,21 +58,80 @@ body {
 table {
     border-collapse: separate;
     border-spacing: 0;
+    background-color: rgba(255, 255, 255, 0.7); /* Background tabel semi transparan */
+    backdrop-filter: blur(4px);
+    border: 2px solid #FFDAB9; /* Border luar warna peach pastel lembut */
+    border-radius: 16px;
+    overflow: hidden;
 }
 
 /* Membuat sudut tabel melengkung halus khas pastel design */
-th:first-child { border-top-left-radius: 12px; }
-th:last-child { border-top-right-radius: 12px; }
+th:first-child { border-top-left-radius: 14px; }
+th:last-child { border-top-right-radius: 14px; }
 
 /* Transisi halus saat tombol atau baris tabel di-hover */
 tr {
     transition: background-color 0.2s ease-in-out;
 }
 
-button, select, input {
+button, select, input, textarea {
     transition: all 0.2s ease;
+    outline: none;
 }
 
 button:active {
     transform: scale(0.95); /* Efek membal saat tombol ditekan */
+}
+
+/* ==========================================================================
+   TAMBAHAN KUSTOMISASI BARU BIAR MAKIN ESTETIK & INTERAKTIF
+   ========================================================================== */
+
+/* 1. Efek Fokus Input & Select Menu */
+input:focus, select:focus, textarea:focus {
+    border-color: #FFB6C1 !important; /* Berubah jadi Pink Pastel saat diketik */
+    box-shadow: 0 0 0 4px rgba(255, 182, 193, 0.4); /* Efek glow pink lembut */
+    transform: translateY(-1px); /* Sedikit naik ke atas agar terasa interaktif */
+}
+
+/* 2. Kustomisasi Scrollbar Browser Bertema Pastel */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #FFF9E6; 
+}
+::-webkit-scrollbar-thumb {
+    background: #FFB6C1; /* Warna scrollbar pink Bubu */
+    border-radius: 20px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #FF9999; 
+}
+
+/* 3. Efek Bayangan Card / Blok Form (Soft Claymorphism) */
+.bubu-card {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(8px);
+    border: 2px solid #FFF0F5;
+    box-shadow: 0 8px 24px rgba(210, 105, 30, 0.06); /* Shadow cokelat tipis transparan */
+    border-radius: 24px;
+}
+
+/* 4. Animasi Denyut Lembut untuk Tombol Simpan/Utama */
+@keyframes denyutGemas {
+    0% { box-shadow: 0 0 0 0 rgba(255, 182, 193, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(255, 182, 193, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 182, 193, 0); }
+}
+
+.btn-nyala {
+    animation: denyutGemas 2s infinite;
+}
+
+/* 5. Dekorasi Teks Highlight */
+::selection {
+    background-color: #FFB6C1;
+    color: white;
 }
