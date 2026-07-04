@@ -1,7 +1,9 @@
-/* Styling Utama Body */
+/* ==========================================================================
+   STYLE UTAMA BODY & CONTAINER LAPISAN LATAR BELAKANG
+   ========================================================================== */
 body { 
     font-family: 'Quicksand', sans-serif; 
-    background-color: #FFF9E6 !important; /* Fix Kuning Pastel Utama */
+    background-color: #FFF9E6 !important; /* Warna Kuning Pastel Utama */
     transition: font-family 0.3s ease;
 }
 
@@ -19,7 +21,7 @@ body {
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
-    background-color: #FFF9E6 !important; /* Fix Mengikuti Kuning Pastel */
+    background-color: #FFF9E6 !important; /* Mengikuti Kuning Pastel */
 }
 
 /* Styling dasar untuk setiap karakter GIF yang meluncur */
@@ -28,21 +30,48 @@ body {
     width: 75px;
     height: 75px;
     object-fit: contain;
-    opacity: 0.35; /* Supaya transparan halus dan tulisan tetap jelas dibaca */
+    opacity: 0.35; /* Transparan halus agar tulisan tetap kontras dan jelas dibaca */
     user-select: none;
     will-change: transform;
 }
 
-/* --- DAFTAR CLASS FONT BARU UNTUK SELEKTOR DYNAMIC DROPDOWN --- */
+/* ==========================================================================
+   DAFTAR CLASS FONT BARU UNTUK SELEKTOR DYNAMIC DROPDOWN
+   ========================================================================== */
 .font-fredoka { font-family: 'Fredoka One', cursive !important; }
 .font-quicksand { font-family: 'Quicksand', sans-serif !important; }
 .font-pacifico { font-family: 'Pacifico', cursive !important; }
 .font-comfortaa { font-family: 'Comfortaa', cursive !important; }
 .font-patrick { font-family: 'Patrick Hand', cursive !important; }
 
-/* Memastikan semua element input, tombol, dan form ikut berubah font-nya */
-.font-fredoka input, .font-fredoka textarea, .font-fredoka select, .font-fredoka button, .font-fredoka h1, .font-fredoka h2 { font-family: 'Fredoka One', cursive !important; }
-.font-quicksand input, .font-quicksand textarea, .font-quicksand select, .font-quicksand button, .font-quicksand h1, .font-quicksand h2 { font-family: 'Quicksand', sans-serif !important; }
-.font-pacifico input, .font-pacifico textarea, .font-pacifico select, .font-pacifico button, .font-pacifico h1, .font-pacifico h2 { font-family: 'Pacifico', cursive !important; }
-.font-comfortaa input, .font-comfortaa textarea, .font-comfortaa select, .font-comfortaa button, .font-comfortaa h1, .font-comfortaa h2 { font-family: 'Comfortaa', cursive !important; }
-.font-patrick input, .font-patrick textarea, .font-patrick select, .font-patrick button, .font-patrick h1, .font-patrick h2 { font-family: 'Patrick Hand', cursive !important; }
+/* Memastikan semua element input, tombol, tabel, dan heading ikut berubah font-nya */
+.font-fredoka input, .font-fredoka textarea, .font-fredoka select, .font-fredoka button, .font-fredoka h1, .font-fredoka h2, .font-fredoka h3, .font-fredoka table, .font-fredoka p, .font-fredoka div { font-family: 'Fredoka One', cursive !important; }
+.font-quicksand input, .font-quicksand textarea, .font-quicksand select, .font-quicksand button, .font-quicksand h1, .font-quicksand h2, .font-quicksand h3, .font-quicksand table, .font-quicksand p, .font-quicksand div { font-family: 'Quicksand', sans-serif !important; }
+.font-pacifico input, .font-pacifico textarea, .font-pacifico select, .font-pacifico button, .font-pacifico h1, .font-pacifico h2, .font-pacifico h3, .font-pacifico table, .font-pacifico p, .font-pacifico div { font-family: 'Pacifico', cursive !important; }
+.font-comfortaa input, .font-comfortaa textarea, .font-comfortaa select, .font-comfortaa button, .font-comfortaa h1, .font-comfortaa h2, .font-comfortaa h3, .font-comfortaa table, .font-comfortaa p, .font-comfortaa div { font-family: 'Comfortaa', cursive !important; }
+.font-patrick input, .font-patrick textarea, .font-patrick select, .font-patrick button, .font-patrick h1, .font-patrick h2, .font-patrick h3, .font-patrick table, .font-patrick p, .font-patrick div { font-family: 'Patrick Hand', cursive !important; }
+
+/* ==========================================================================
+   KUSTOMISASI KHUSUS TABEL & BUTTON BIAR MAKIN GEMAS (BUBU STYLE)
+   ========================================================================== */
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Membuat sudut tabel melengkung halus khas pastel design */
+th:first-child { border-top-left-radius: 12px; }
+th:last-child { border-top-right-radius: 12px; }
+
+/* Transisi halus saat tombol atau baris tabel di-hover */
+tr {
+    transition: background-color 0.2s ease-in-out;
+}
+
+button, select, input {
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.95); /* Efek membal saat tombol ditekan */
+}
