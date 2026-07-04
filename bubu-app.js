@@ -495,6 +495,53 @@ function pasangEfekSuaraKetik() {
     });
 }
 
+// --- FITUR DOWNLOAD LAPORAN PDF ---
+function downloadPDF() {
+    const elemenTabel = document.getElementById('tabelBody')?.parentElement;
+    const judulLaporan = document.getElementById('tableTitle')?.innerText || 'Laporan Bubu Dudu';
+
+    if (!elemenTabel) {
+        showModal({ title: "Gagal", message: "Tabel data tidak ditemukan untuk dicetak!", type: "warning", showCancel: false });
+        return;
+    }
+
+    // Membuat wrapper kloningan agar layout aslinya tidak berantakan
+    const wrapperKloning = document.createElement('div');
+    wrapperKloning.style.padding = '20px';
+    wrapperKloning.style.fontFamily = 'sans-serif';
+    
+    // Tambah header khusus cetak PDF harian/tabungan
+    wrapperKloning.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px dashed #FFDAB9; padding-bottom: 10px;">
+            <h1 style="color: #D2691E; margin: 0; font-size: 20px;">🧸 ${judulLaporan} 🧸</h1>
+            <p style="color: #CD853F; margin: 5px 0 0 0; font-size: 12px;">Dicetak pada: ${new Date().toLocaleDateString('id-ID')}</p>
+        </div>
+    `;
+
+    // Gandakan tabel data, buang kolom "Aksi" paling kanan
+    const tabelKloning = elemenTabel.cloneNode(true);
+    const semuaBaris = tabelKloning.querySelectorAll('tr');
+    semuaBaris.forEach(baris => {
+        if (baris.lastElementChild) {
+            baris.removeChild(baris.lastElementChild);
+        }
+    });
+
+    wrapperKloning.appendChild(tabelKloning);
+
+    // Opsi output html2pdf
+    const opsiPdf = {
+        margin:       10,
+        filename:     `${judulLaporan.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Eksekusi download file
+    html2pdf().set(opsiPdf).from(wrapperKloning).save();
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     ambilKursTerbaru();
     inisialisasiGifLatar();
