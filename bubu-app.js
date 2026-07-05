@@ -617,6 +617,7 @@ function mintaHapus(id) {
     if (!target) return;
 
     showModal({
+        boxId: "modalBox",
         title: "Hapus Data?",
         message: `Data "${target.keterangan || target.namaToko}" senilai ${formatRupiah(target.jumlah)} mau dibuang? 🥺`,
         type: "danger",
@@ -704,6 +705,34 @@ function downloadPDF() {
             showCancel: true 
         });
     }
+}
+
+// --- FUNGSI POPUP PESAN ROMANTIS BARU ---
+function pencetTombolRomantis() {
+    // 1. Mengubah isi teks modal secara dinamis
+    document.getElementById('modalIcon').innerText = '🫶💖🧸';
+    document.getElementById('modalTitle').innerText = 'Pesan Spesial Buat Kamu! ✨';
+    document.getElementById('modalMessage').innerText = 'Hai cantikku, semangat terus yaa, mmwah! 🫶';
+    
+    // 2. Membuat tombol konfirmasi kustom "Mwah 💖"
+    const wadahTombol = document.getElementById('modalActionButtons');
+    wadahTombol.innerHTML = `
+        <button onclick="tutupModalRomantis()" class="w-full bg-[#FFB6C1] hover:bg-[#FF9999] text-white font-cute py-2 px-4 rounded-xl transition text-xs shadow-xs cursor-pointer btn-nyala">
+            Mwah kembali 💖
+        </button>
+    `;
+    
+    // 3. Menampilkan modal popup ke atas layar
+    const modal = document.getElementById('customModal');
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    document.getElementById('modalBox').classList.remove('scale-95');
+}
+
+function tutupModalRomantis() {
+    // Menyembunyikan kembali elemen modal
+    const modal = document.getElementById('customModal');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    document.getElementById('modalBox').classList.add('scale-95');
 }
 
 document.addEventListener("DOMContentLoaded", function() {
