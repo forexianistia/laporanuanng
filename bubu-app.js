@@ -8,18 +8,23 @@ const form = document.getElementById('mainForm');
 let KURS_USD_TO_IDR = 17994.40;
 let KURS_CENT_TO_IDR = 179.944;
 
-// --- SISTEM LATAR BELAKANG FLUID DRAWER (GIF BERGERAK BEBAS) ---
+// --- SISTEM LATAR BELAKANG FLUID DRAWER (SEMUA GIF TERBARU DARI REPO KAMU) ---
 const listFileGif = [
     "9976-bubu-lol.gif",
     "10814-bubu-and-dudu-drink-glass.gif",
     "18713-bubu.gif",
     "23724-unyel.gif",
-    "55578-pandasquishy.gif",
-    "70798-bearsquish.gif",
-    "86953-bubududu-kiss.gif",
     "4178-bubuwinterhopyellow.gif",
     "4393-bearbounce.gif",
-    "4694-sleep-bubupanda.gif"
+    "4694-sleep-bubupanda.gif",
+    "4699-bubududu-ignore.gif",
+    "55578-pandasquishy.gif",
+    "6192-bubupanda-secret.gif",
+    "6809-bubpanda-toilet.gif",
+    "70798-bearsquish.gif",
+    "7425-cleaning-bubupanda.gif",
+    "7600-christmaspandawink.gif",
+    "86953-bubududu-kiss.gif"
 ];
 
 const containerBg = document.getElementById('bg-container');
@@ -280,12 +285,10 @@ function switchMode(mode) {
     renderView();
 }
 
-// --- FUNGSI BARU: PEMBUATAN & RE-RENDER GRAFIK DATA ---
 function updateGrafikKeuangan(dataTerfilter) {
     const ctxCanvas = document.getElementById('grafikKeuangan');
     if (!ctxCanvas || currentMode !== 'keuangan') return;
 
-    // Kelompokkan data berdasarkan tanggal
     const dataPerTanggal = {};
     dataTerfilter.forEach(item => {
         const tgl = item.tanggal || 'Tanpa Tanggal';
@@ -299,17 +302,14 @@ function updateGrafikKeuangan(dataTerfilter) {
         }
     });
 
-    // Urutkan tanggal dari yang paling lampau ke paling baru untuk grafik
     const labelSumbuX = Object.keys(dataPerTanggal).sort((a, b) => new Date(a) - new Date(b));
     const datasetMasuk = labelSumbuX.map(tgl => dataPerTanggal[tgl].pemasukan);
     const datasetKeluar = labelSumbuX.map(tgl => dataPerTanggal[tgl].pengeluaran);
 
-    // Hancurkan instance lama jika ada, mencegah duplikasi penumpukan grafik
     if (grafikInstance) {
         grafikInstance.destroy();
     }
 
-    // Bangun Chart.js Bar Chart berbobot estetik Bubu Dudu (Ungu & Pink Lembut)
     grafikInstance = new Chart(ctxCanvas, {
         type: 'bar',
         data: {
@@ -318,7 +318,7 @@ function updateGrafikKeuangan(dataTerfilter) {
                 {
                     label: '🎁 Uang Masuk',
                     data: datasetMasuk,
-                    backgroundColor: 'rgba(14, 165, 233, 0.6)', // Sky Blue pastel
+                    backgroundColor: 'rgba(14, 165, 233, 0.6)', 
                     borderColor: 'rgb(14, 165, 233)',
                     borderWidth: 2,
                     borderRadius: 8
@@ -326,7 +326,7 @@ function updateGrafikKeuangan(dataTerfilter) {
                 {
                     label: '💸 Uang Keluar',
                     data: datasetKeluar,
-                    backgroundColor: 'rgba(251, 113, 133, 0.6)', // Rose pink pastel
+                    backgroundColor: 'rgba(251, 113, 133, 0.6)', 
                     borderColor: 'rgb(251, 113, 133)',
                     borderWidth: 2,
                     borderRadius: 8
@@ -393,12 +393,11 @@ function renderView() {
             `;
         }
 
-        // Jalankan Filter Data berdasarkan Dropdown Bulan
         let dataTerfilter = dbKeuangan;
         if (filterBulan !== 'SEMUA') {
             dataTerfilter = dbKeuangan.filter(item => {
                 if (!item.tanggal) return false;
-                const bulanItem = item.tanggal.split('-')[1]; // Format: YYYY-MM-DD
+                const bulanItem = item.tanggal.split('-')[1]; 
                 return bulanItem === filterBulan;
             });
         }
@@ -423,7 +422,6 @@ function renderView() {
             `;
         }
 
-        // Render Grafik dengan data terfilter
         updateGrafikKeuangan(dataTerfilter);
 
         dataTerfilter.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
@@ -641,7 +639,6 @@ function eksekusiHapus() {
     renderView();
 }
 
-// --- OPTIMASI EFEK SUARA KETIK (EVENT DELEGATION) ---
 function pasangEfekSuaraKetik() {
     if (!form) return;
     form.removeEventListener('input', tanganiSuaraInputForm);
@@ -654,7 +651,6 @@ function tanganiSuaraInputForm(e) {
     }
 }
 
-// --- FITUR DOWNLOAD LAPORAN PDF ---
 function downloadPDF() {
     const elemenTabel = document.getElementById('tabelBody')?.parentElement;
     const judulLaporan = document.getElementById('tableTitle')?.innerText || 'Laporan Bubu Dudu';
@@ -726,7 +722,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Event listener tambahan untuk Dropdown Filter Bulan agar grafik otomatis me-render ulang data baru
     const dropdownBulan = document.getElementById('filterBulan');
     if (dropdownBulan) {
         dropdownBulan.addEventListener('change', renderView);
