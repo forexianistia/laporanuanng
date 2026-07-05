@@ -275,12 +275,12 @@ function switchMode(mode) {
     } else {
         if (btnTabungan) btnTabungan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
         if (btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer text-[#CD853F] hover:text-[#D2691E]";
-        if (labelToko) labelToko.innerText = "🐷 Nama Celengan / Wadah";
+        if (labelToko) labelToko.innerText = "🐣 Nama Celengan / Wadah";
         if (labelDetail) labelDetail.innerText = "🎯 Target / Goal Nabung";
         if (katContainer) katContainer.classList.add('hidden');
         if (fContainerBulan) fContainerBulan.classList.add('hidden');
         if (canvasGrafik && canvasGrafik.parentElement) canvasGrafik.parentElement.classList.add('hidden');
-        if (tTitle) tTitle.innerText = "🐷 Catatan Tabungan Bubu Dudu";
+        if (tTitle) tTitle.innerText = "🐣 Catatan Tabungan Bubu Dudu";
     }
     renderView();
 }
