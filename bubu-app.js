@@ -712,7 +712,11 @@ function pencetTombolRomantis() {
     // 1. Mengubah isi teks modal secara dinamis
     document.getElementById('modalIcon').innerText = '🫶💖🧸';
     document.getElementById('modalTitle').innerText = 'Pesan Spesial Buat Kamu! ✨';
-    document.getElementById('modalMessage').innerText = 'Hai cantikku, semangat terus yaa, mmwah! 🫶';
+    document.getElementById('modalMessage').innerText = 'Tahu enggak kenapa hari ini cerah? Karena senyum kamu baru saja lewat di pikiran aku. 😉';
+    document.getElementById('modalMessage').innerText = 'Semangatnya udah sampai, langsung bikin detak jantung aku sedikit lebih cepat. Tanggung jawab, lho... 💓';
+    document.getElementById('modalMessage').innerText = 'Kalau kangen itu ada hitungan matematisnya, mungkin aku udah kehabisan angka buat ngitung seberapa sering mikirin kamu. 📊✨';
+    document.getElementById('modalMessage').innerText = 'Fokus aku hari ini cuma dua: selesaiin kerjaan, sama bayangin senyum manis kamu. Mmwah! 💋';
+    document.getElementById('modalMessage').innerText = 'Hari ini kamu kelihatan lebih manis deh, padahal kita belum ketemu. Kok bisa ya? 🍯';
     
     // 2. Membuat tombol konfirmasi kustom "Mwah 💖"
     const wadahTombol = document.getElementById('modalActionButtons');
