@@ -2,6 +2,7 @@ let currentMode = 'keuangan';
 let dbKeuangan = [];
 let dbTabungan = [];
 let pendingDeleteId = null;
+let grafikInstance = null; // Menyimpan instance grafik agar tidak tumpang tindih
 
 const form = document.getElementById('mainForm');
 let KURS_USD_TO_IDR = 17994.40;
@@ -125,10 +126,18 @@ function mainkanSuaraKetik() {
     } else if (modeSuara === '2') {
         let osc = ctx.createOscillator();
         let gain = ctx.createGain();
+        let filter = ctx.createBiquadFilter();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(440, sekarang);
         osc.frequency.exponentialRampToValueAtTime(220, sekarang + 0.15);
-        gain.connect(ctx.destination); osc.connect(gain);
+        
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(800, sekarang);
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
         gain.gain.setValueAtTime(0.08, sekarang);
         gain.gain.exponentialRampToValueAtTime(0.01, sekarang + 0.15);
         osc.start(sekarang); osc.stop(sekarang + 0.15);
@@ -246,6 +255,8 @@ function switchMode(mode) {
     const labelDetail = document.getElementById('labelDetail');
     const katContainer = document.getElementById('kategoriContainer');
     const tTitle = document.getElementById('tableTitle');
+    const fContainerBulan = document.getElementById('kategoriContainerBulan');
+    const canvasGrafik = document.getElementById('grafikKeuangan');
 
     if (mode === 'keuangan') {
         if (btnKeuangan) btnKeuangan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
@@ -253,6 +264,8 @@ function switchMode(mode) {
         if (labelToko) labelToko.innerText = "🏪 Toko / Sumber Uang";
         if (labelDetail) labelDetail.innerText = "🍭 Keterangan Barang";
         if (katContainer) katContainer.classList.remove('hidden');
+        if (fContainerBulan) fContainerBulan.classList.remove('hidden');
+        if (canvasGrafik && canvasGrafik.parentElement) canvasGrafik.parentElement.classList.remove('hidden');
         if (tTitle) tTitle.innerText = "📈 Semua Histori Keuangan (Total)";
     } else {
         if (btnTabungan) btnTabungan.className = "w-1/2 py-2 text-xs font-cute rounded-xl transition-all cursor-pointer bg-[#FFB6C1] text-white shadow-sm";
@@ -260,9 +273,95 @@ function switchMode(mode) {
         if (labelToko) labelToko.innerText = "🐷 Nama Celengan / Wadah";
         if (labelDetail) labelDetail.innerText = "🎯 Target / Goal Nabung";
         if (katContainer) katContainer.classList.add('hidden');
+        if (fContainerBulan) fContainerBulan.classList.add('hidden');
+        if (canvasGrafik && canvasGrafik.parentElement) canvasGrafik.parentElement.classList.add('hidden');
         if (tTitle) tTitle.innerText = "🐷 Catatan Tabungan Bubu Dudu";
     }
     renderView();
+}
+
+// --- FUNGSI BARU: PEMBUATAN & RE-RENDER GRAFIK DATA ---
+function updateGrafikKeuangan(dataTerfilter) {
+    const ctxCanvas = document.getElementById('grafikKeuangan');
+    if (!ctxCanvas || currentMode !== 'keuangan') return;
+
+    // Kelompokkan data berdasarkan tanggal
+    const dataPerTanggal = {};
+    dataTerfilter.forEach(item => {
+        const tgl = item.tanggal || 'Tanpa Tanggal';
+        if (!dataPerTanggal[tgl]) {
+            dataPerTanggal[tgl] = { pemasukan: 0, pengeluaran: 0 };
+        }
+        if (item.jenis === 'Pemasukan') {
+            dataPerTanggal[tgl].pemasukan += item.jumlah;
+        } else if (item.jenis === 'Pengeluaran') {
+            dataPerTanggal[tgl].pengeluaran += item.jumlah;
+        }
+    });
+
+    // Urutkan tanggal dari yang paling lampau ke paling baru untuk grafik
+    const labelSumbuX = Object.keys(dataPerTanggal).sort((a, b) => new Date(a) - new Date(b));
+    const datasetMasuk = labelSumbuX.map(tgl => dataPerTanggal[tgl].pemasukan);
+    const datasetKeluar = labelSumbuX.map(tgl => dataPerTanggal[tgl].pengeluaran);
+
+    // Hancurkan instance lama jika ada, mencegah duplikasi penumpukan grafik
+    if (grafikInstance) {
+        grafikInstance.destroy();
+    }
+
+    // Bangun Chart.js Bar Chart berbobot estetik Bubu Dudu (Ungu & Pink Lembut)
+    grafikInstance = new Chart(ctxCanvas, {
+        type: 'bar',
+        data: {
+            labels: labelSumbuX,
+            datasets: [
+                {
+                    label: '🎁 Uang Masuk',
+                    data: datasetMasuk,
+                    backgroundColor: 'rgba(14, 165, 233, 0.6)', // Sky Blue pastel
+                    borderColor: 'rgb(14, 165, 233)',
+                    borderWidth: 2,
+                    borderRadius: 8
+                },
+                {
+                    label: '💸 Uang Keluar',
+                    data: datasetKeluar,
+                    backgroundColor: 'rgba(251, 113, 133, 0.6)', // Rose pink pastel
+                    borderColor: 'rgb(251, 113, 133)',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        font: { family: 'Quicksand', weight: 'bold', size: 11 }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Quicksand', size: 10 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: { family: 'Quicksand', size: 10 },
+                        callback: function(value) {
+                            if (value >= 1000000) return 'Rp ' + (value / 1000000) + 'M';
+                            if (value >= 1000) return 'Rp ' + (value / 1000) + 'rb';
+                            return 'Rp ' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 function renderView() {
@@ -271,6 +370,7 @@ function renderView() {
     const tbody = document.getElementById('tabelBody');
     const inputTanggal = document.getElementById('tanggal');
     const selectJenis = document.getElementById('jenis');
+    const filterBulan = document.getElementById('filterBulan')?.value || 'SEMUA';
     
     if (inputTanggal && !inputTanggal.value) {
         inputTanggal.value = new Date().toISOString().split('T')[0];
@@ -293,31 +393,44 @@ function renderView() {
             `;
         }
 
-        let totalPemasukan = dbKeuangan.filter(x => x.jenis === 'Pemasukan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
-        let totalPengeluaran = dbKeuangan.filter(x => x.jenis === 'Pengeluaran').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
+        // Jalankan Filter Data berdasarkan Dropdown Bulan
+        let dataTerfilter = dbKeuangan;
+        if (filterBulan !== 'SEMUA') {
+            dataTerfilter = dbKeuangan.filter(item => {
+                if (!item.tanggal) return false;
+                const bulanItem = item.tanggal.split('-')[1]; // Format: YYYY-MM-DD
+                return bulanItem === filterBulan;
+            });
+        }
+
+        let totalPemasukan = dataTerfilter.filter(x => x.jenis === 'Pemasukan').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
+        let totalPengeluaran = dataTerfilter.filter(x => x.jenis === 'Pengeluaran').reduce((acc, c) => acc + (parseFloat(c.jumlah) || 0), 0);
         
         if (summary) {
             summary.innerHTML = `
                 <div class="bg-[#E0FFFF]/90 backdrop-blur-xs p-3 rounded-2xl border-2 border-sky-200 shadow-xs">
-                    <p class="text-[10px] font-bold text-sky-600 uppercase">🎁 Total Masuk (Semua)</p>
+                    <p class="text-[10px] font-bold text-sky-600 uppercase">🎁 Total Masuk (${filterBulan === 'SEMUA' ? 'Semua' : 'Bulan Ini'})</p>
                     <p class="text-md font-cute text-sky-700">${formatRupiah(totalPemasukan)}</p>
                 </div>
                 <div class="bg-[#FFE4E1]/90 backdrop-blur-xs p-3 rounded-2xl border-2 border-rose-200 shadow-xs">
-                    <p class="text-[10px] font-bold text-rose-500 uppercase">💸 Total Keluar (Semua)</p>
+                    <p class="text-[10px] font-bold text-rose-500 uppercase">💸 Total Keluar (${filterBulan === 'SEMUA' ? 'Semua' : 'Bulan Ini'})</p>
                     <p class="text-md font-cute text-rose-600">${formatRupiah(totalPengeluaran)}</p>
                 </div>
                 <div class="bg-[#FFF0F5]/90 backdrop-blur-xs p-3 rounded-2xl border-2 border-purple-200 shadow-xs">
-                    <p class="text-[10px] font-bold text-purple-500 uppercase">👛 Sisa Dompet Total</p>
+                    <p class="text-[10px] font-bold text-purple-500 uppercase">👛 Sisa Dompet</p>
                     <p class="text-md font-cute text-[#D2691E]">${formatRupiah(totalPemasukan - totalPengeluaran)}</p>
                 </div>
             `;
         }
 
-        dbKeuangan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-        if (dbKeuangan.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Belum ada catatan keuangan harian.</td></tr>`;
+        // Render Grafik dengan data terfilter
+        updateGrafikKeuangan(dataTerfilter);
+
+        dataTerfilter.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+        if (dataTerfilter.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Belum ada catatan keuangan harian pada periode ini.</td></tr>`;
         } else {
-            dbKeuangan.forEach(item => {
+            dataTerfilter.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-rose-50/30 border-b border-dashed border-[#FFDAB9] text-xs";
                 tr.innerHTML = `
@@ -528,7 +641,7 @@ function eksekusiHapus() {
     renderView();
 }
 
-// --- OPTIMASI EFREK SUARA KETIK (EVENT DELEGATION) ---
+// --- OPTIMASI EFEK SUARA KETIK (EVENT DELEGATION) ---
 function pasangEfekSuaraKetik() {
     if (!form) return;
     form.removeEventListener('input', tanganiSuaraInputForm);
@@ -599,7 +712,7 @@ function downloadPDF() {
 
 document.addEventListener("DOMContentLoaded", function() {
     ambilKursTerbaru();
-    inisialisASIgifLatar();
+    inisialisasiGifLatar();
     pasangEfekSuaraKetik();
     
     const fontTersimpan = localStorage.getItem('fontAplikasiPilihan') || 'font-fredoka';
@@ -611,5 +724,11 @@ document.addEventListener("DOMContentLoaded", function() {
         selectMenuFont.addEventListener('change', function() {
             gantiFontAplikasi(this.value);
         });
+    }
+
+    // Event listener tambahan untuk Dropdown Filter Bulan agar grafik otomatis me-render ulang data baru
+    const dropdownBulan = document.getElementById('filterBulan');
+    if (dropdownBulan) {
+        dropdownBulan.addEventListener('change', renderView);
     }
 });
