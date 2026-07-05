@@ -709,54 +709,41 @@ function downloadPDF() {
 
 // --- FUNGSI POPUP PESAN ROMANTIS BARU ---
 function pencetTombolRomantis() {
-    // 1. Mengubah isi teks modal secara dinamis
-    document.getElementById('modalIcon').innerText = '🫶💖🧸';
-    document.getElementById('modalTitle').innerText = 'Pesan Spesial Buat Kamu! ✨';
-    document.getElementById('modalMessage').innerText = 'Tahu enggak kenapa hari ini cerah? Karena senyum kamu baru saja lewat di pikiran aku. 😉';
-    document.getElementById('modalMessage').innerText = 'Semangatnya udah sampai, langsung bikin detak jantung aku sedikit lebih cepat. Tanggung jawab, lho... 💓';
-    document.getElementById('modalMessage').innerText = 'Kalau kangen itu ada hitungan matematisnya, mungkin aku udah kehabisan angka buat ngitung seberapa sering mikirin kamu. 📊✨';
-    document.getElementById('modalMessage').innerText = 'Fokus aku hari ini cuma dua: selesaiin kerjaan, sama bayangin senyum manis kamu. Mmwah! 💋';
-    document.getElementById('modalMessage').innerText = 'Hari ini kamu kelihatan lebih manis deh, padahal kita belum ketemu. Kok bisa ya? 🍯';
+    // 1. Mengumpulkan semua opsi pesan romantis ke dalam Array
+    const daftarPesan = [
+        "Tahu enggak kenapa hari ini cerah? Karena senyum kamu baru saja lewat di pikiran aku. 😉",
+        "Semangatnya udah sampai, langsung bikin detak jantung aku sedikit lebih cepat. Tanggung jawab, lho... 💓",
+        "Kalau kangen itu ada hitungan matematisnya, mungkin aku udah kehabisan angka buat ngitung seberapa sering mikirin kamu. 📊✨",
+        "Fokus aku hari ini cuma dua: selesaiin kerjaan, sama bayangin senyum manis kamu. Mmwah! 💋",
+        "Hari ini kamu kelihatan lebih manis deh, padahal kita belum ketemu. Kok bisa ya? 🍯"
+    ];
+
+    // 2. Mengambil satu pesan secara acak biar seru tiap kali dipencet
+    const pesanAcak = daftarPesan[Math.floor(Math.random() * daftarPesan.length)];
+
+    // 3. Memasukkan konten ke komponen Modal kustom kamu
+    const mIcon = document.getElementById('modalIcon');
+    if (mIcon) mIcon.innerText = '💖';
+
+    const mTitle = document.getElementById('modalTitle');
+    if (mTitle) mTitle.innerText = 'Pesan Spesial Buat Kamu! ✨';
+
+    const mMessage = document.getElementById('modalMessage');
+    if (mMessage) mMessage.innerText = pesanAcak;
     
-    // 2. Membuat tombol konfirmasi kustom "Mwah 💖"
+    // 4. Membuat tombol konfirmasi kustom "Mwah 💖" dengan aman
     const wadahTombol = document.getElementById('modalActionButtons');
-    wadahTombol.innerHTML = `
-        <button onclick="tutupModalRomantis()" class="w-full bg-[#FFB6C1] hover:bg-[#FF9999] text-white font-cute py-2 px-4 rounded-xl transition text-xs shadow-xs cursor-pointer btn-nyala">
-            Mwah kembali 💖
-        </button>
-    `;
-    
-    // 3. Menampilkan modal popup ke atas layar
-    const modal = document.getElementById('customModal');
-    modal.classList.remove('opacity-0', 'pointer-events-none');
-    document.getElementById('modalBox').classList.remove('scale-95');
-}
-
-function tutupModalRomantis() {
-    // Menyembunyikan kembali elemen modal
-    const modal = document.getElementById('customModal');
-    modal.classList.add('opacity-0', 'pointer-events-none');
-    document.getElementById('modalBox').classList.add('scale-95');
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-    ambilKursTerbaru();
-    inisialisasiGifLatar();
-    pasangEfekSuaraKetik();
-    
-    const fontTersimpan = localStorage.getItem('fontAplikasiPilihan') || 'font-fredoka';
-    gantiFontAplikasi(fontTersimpan);
-    
-    const selectMenuFont = document.getElementById('menuFont');
-    if (selectMenuFont) {
-        selectMenuFont.value = fontTersimpan;
-        selectMenuFont.addEventListener('change', function() {
-            gantiFontAplikasi(this.value);
-        });
+    if (wadahTombol) {
+        wadahTombol.innerHTML = `
+            <button onclick="closeModal()" class="w-full bg-[#FFB6C1] hover:bg-[#FF9999] text-white font-cute py-2 px-4 rounded-xl transition text-xs shadow-xs cursor-pointer btn-nyala">
+                Mwah 💖
+            </button>
+        `;
     }
 
-    const dropdownBulan = document.getElementById('filterBulan');
-    if (dropdownBulan) {
-        dropdownBulan.addEventListener('change', renderView);
-    }
-});
+    // 5. Menampilkan modal (menghapus class opacity-0 dan pointer-events-none)
+    const modal = document.getElementById('customModal');
+    const box = document.getElementById('modalBox');
+    if (modal) modal.classList.remove('pointer-events-none', 'opacity-0');
+    if (box) box.classList.remove('scale-95');
+}
