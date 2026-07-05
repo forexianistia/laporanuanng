@@ -6,32 +6,46 @@ body {
     background-color: #FFF9E6 !important; 
     transition: font-family 0.3s ease;
     color: #5C4033; 
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
 }
 
 .font-cute { 
     font-family: 'Fredoka One', cursive; 
 }
 
+/* PERBAIKAN: Pastikan container nempel di layar dan z-index diatur tepat di bawah konten */
 #bg-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -1;
+    z-index: 0; /* Diubah ke 0 agar tidak tenggelam di bawah background body */
     overflow: hidden;
     pointer-events: none;
-    background-color: #FFF9E6 !important; 
+    background-color: transparent !important; /* Diubah ke transparan agar warna body dasar kelihatan */
 }
 
+/* PERBAIKAN: Naikkan opacity sedikit agar lebih jelas terlihat, dan beri z-index */
 .floating-gif {
     position: absolute;
     width: 75px;
     height: 75px;
     object-fit: contain;
-    opacity: 0.35; 
+    opacity: 0.55; /* Dinaikkan dari 0.35 ke 0.55 agar lebih kelihatan */
     user-select: none;
+    pointer-events: none;
     will-change: transform;
+    z-index: 1;
+}
+
+/* PERBAIKAN: Semua konten utama aplikasi WAJIB dibungkus sebuah container (misal #app-root atau main) 
+   dan diberikan z-index lebih tinggi agar berada di atas GIF jalannya */
+#app-root, main, .container {
+    position: relative;
+    z-index: 10; 
 }
 
 /* ==========================================================================
