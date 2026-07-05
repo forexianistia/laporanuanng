@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght=500;700&family=Pacifico&family=Comfortaa:wght=700&family=Patrick+Hand&display=swap" rel="stylesheet">
     
+    <!-- LIBRARY GRAFIK (Chart.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         /* Fallback class styling jika file bubu-style.css belum termuat */
         .font-fredoka { font-family: 'Fredoka One', sans-serif; }
@@ -181,6 +184,12 @@
                             </select>
                         </div>
                     </div>
+                    
+                    <!-- ==================== WADAH GRAFIK BARU (CHART CONTAINER) ==================== -->
+                    <div class="mb-5 p-4 bg-[#FFFBF0] rounded-2xl border border-[#FFDAB9] data-html2pdf-ignore">
+                        <canvas id="grafikKeuangan" class="max-h-56 w-full"></canvas>
+                    </div>
+                    <!-- ============================================================================== -->
                     
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
