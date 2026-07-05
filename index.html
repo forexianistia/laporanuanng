@@ -3,38 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧸Catatan Keuangan Dudu Bubu🧸</title>
+    <title>🧸 Catatan Keuangan Dudu Bubu 🧸</title>
+    
     <!-- Tailwind CSS & Google Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght=500;700&family=Pacifico&family=Comfortaa:wght=700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght=700&family=Fredoka+One&family=Pacifico&family=Patrick+Hand&family=Quicksand:wght=500;700&display=swap" rel="stylesheet">
     
-    <!-- LIBRARY GRAFIK (Chart.js) -->
+    <!-- Library Chart.js & html2pdf.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <style>
-        /* Fallback class styling jika file bubu-style.css belum termuat */
-        .font-fredoka { font-family: 'Fredoka One', sans-serif; }
-        .font-quicksand { font-family: 'Quicksand', sans-serif; }
-        .font-pacifico { font-family: 'Pacifico', cursive; }
-        .font-comfortaa { font-family: 'Comfortaa', cursive; }
-        .font-patrick { font-family: 'Patrick Hand', cursive; }
-        .font-cute { font-weight: bold; }
-        .floating-gif {
-            position: fixed;
-            width: 75px;
-            height: 75px;
-            object-fit: contain;
-            will-change: transform;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.7;
-        }
-    </style>
+    <!-- Hubungkan dengan Style Khusus Bubu -->
+    <link rel="stylesheet" href="bubu-style.css">
 </head>
 <body class="text-slate-700 min-h-screen pb-12 relative bg-[#FFF9E6] font-fredoka" id="mainBody">
 
     <!-- CONTAINER BACKGROUND ANIMASI GIF -->
-    <div id="bg-container" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+    <div id="bg-container"></div>
 
     <!-- AREA UTAMA YANG AKAN DI-DOWNLOAD -->
     <div id="cetak-area" class="relative min-h-screen bg-transparent z-10">
@@ -76,7 +61,7 @@
                     </div>
 
                     <!-- TOMBOL DOWNLOAD PDF -->
-                    <button onclick="downloadPDF()" class="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-white font-cute px-4 py-3 rounded-2xl transition shadow-md cursor-pointer text-xs flex items-center justify-center gap-1 border-2 border-white">
+                    <button onclick="downloadPDF()" class="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-white font-cute px-4 py-3 rounded-2xl transition shadow-md cursor-pointer text-xs flex items-center justify-center gap-1 border-2 border-white btn-nyala">
                         📥 Cetak PDF
                     </button>
                 </div>
@@ -103,17 +88,17 @@
                         
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">📅 Tanggal</label>
-                            <input type="date" id="tanggal" required class="w-full text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none focus:border-[#FFB6C1]">
+                            <input type="date" id="tanggal" required class="w-full text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none">
                         </div>
 
                         <div>
                             <label id="labelToko" class="block text-xs font-bold text-slate-500 mb-1">🏪 Toko / Sumber Uang</label>
-                            <input type="text" id="namaToko" required placeholder="Misal: Warung Bakso / Gaji Bulanan" class="input-efek-suara w-full text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none focus:border-[#FFB6C1]">
+                            <input type="text" id="namaToko" required placeholder="Misal: Warung Bakso / Gaji Bulanan" class="input-efek-suara w-full text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none">
                         </div>
 
                         <div>
                             <label id="labelDetail" class="block text-xs font-bold text-slate-500 mb-1">🍭 Keterangan Barang</label>
-                            <input type="text" id="keterangan" required placeholder="Misal: Beli bakso urat 2 porsi" class="input-efek-suara w-full text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none focus:border-[#FFB6C1]">
+                            <input type="text" id="keterangan" required placeholder="Misal: Beli bakso urat 2 porsi" class="input-efek-suara w-full text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none">
                         </div>
 
                         <div id="kategoriContainer">
@@ -136,7 +121,7 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">💰 Jumlah & Mata Uang</label>
                             <div class="flex gap-2">
-                                <input type="number" id="jumlah" required step="any" placeholder="0" class="input-efek-suara w-2/3 text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none focus:border-[#FFB6C1]">
+                                <input type="number" id="jumlah" required step="any" placeholder="0" class="input-efek-suara w-2/3 text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none">
                                 <select id="mataUang" class="w-1/3 text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none bg-white">
                                     <option value="IDR">Rupiah</option>
                                     <option value="USD">USD ($)</option>
@@ -147,7 +132,7 @@
 
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">💬 Alasan / Catatan Tambahan</label>
-                            <textarea id="alasan" rows="2" placeholder="Alasan khilaf..." class="input-efek-suara w-full text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none focus:border-[#FFB6C1]"></textarea>
+                            <textarea id="alasan" rows="2" placeholder="Alasan khilaf..." class="input-efek-suara w-full text-xs p-2.5 border-2 border-[#FFDAB9] rounded-xl focus:outline-none"></textarea>
                         </div>
 
                         <button type="submit" id="submitBtn" class="w-full bg-[#FFB6C1] hover:bg-[#FF9999] text-white font-cute p-3 rounded-xl transition shadow-xs text-xs cursor-pointer">
@@ -164,7 +149,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 data-html2pdf-ignore">
                         <h2 id="tableTitle" class="text-md font-cute text-[#D2691E]">📈 Histori Keuangan Bulanan</h2>
                         
-                        <!-- MENYUNTIKKAN MENU TRANSAKSI BULANAN (FILTER DATA) -->
+                        <!-- FILTRASI DATA -->
                         <div id="kategoriContainerBulan" class="flex items-center gap-1.5 bg-[#FFF5EE] px-3 py-1.5 rounded-2xl border border-[#FFDAB9]">
                             <label for="filterBulan" class="text-[11px] font-bold text-[#CD853F] whitespace-nowrap">📅 Periode:</label>
                             <select id="filterBulan" class="text-[11px] font-bold bg-white text-slate-700 border border-[#FFDAB9] rounded-xl p-1 outline-none cursor-pointer">
@@ -185,12 +170,12 @@
                         </div>
                     </div>
                     
-                    <!-- ==================== WADAH GRAFIK BARU (CHART CONTAINER) ==================== -->
+                    <!-- WADAH GRAFIK (CHART CONTAINER) -->
                     <div class="mb-5 p-4 bg-[#FFFBF0] rounded-2xl border border-[#FFDAB9] data-html2pdf-ignore">
                         <canvas id="grafikKeuangan" class="max-h-56 w-full"></canvas>
                     </div>
-                    <!-- ============================================================================== -->
                     
+                    <!-- AREA TABEL UTAMA -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -219,7 +204,7 @@
         </div>
     </div>
 
-    <!-- Hubungkan script aplikasi utama -->
+    <!-- Script Utama Aplikasi -->
     <script src="bubu-app.js"></script>
 </body>
 </html>
